@@ -1,3 +1,4 @@
+using Microsoft.FluentUI.AspNetCore.Components;
 using TrustCartographer.Core.Services;
 using TrustCartographer.Web.Components;
 
@@ -5,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddSingleton<CryptoService>();
+builder.Services.AddFluentUIComponents();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 

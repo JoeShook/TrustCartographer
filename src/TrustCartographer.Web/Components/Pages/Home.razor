@@ -2,36 +2,37 @@
 
 <PageTitle>TrustCartographer</PageTitle>
 
-<h1>TrustCartographer</h1>
+<FluentLabel Typo="Typography.H3" Style="margin-bottom: 8px;">TrustCartographer</FluentLabel>
+<FluentLabel Typo="Typography.Body">An interactive explorer for trust models across decentralized identity, blockchain, and agent authentication.</FluentLabel>
 
-<p>An interactive explorer for trust models across decentralized identity, blockchain, and agent authentication.</p>
+<FluentStack Orientation="Orientation.Horizontal" Wrap="true" Style="margin-top: 24px; gap: 16px;">
+    <FluentCard AreaRestricted="false" Style="width: 300px; padding: 20px;">
+        <FluentLabel Typo="Typography.H5">Key Pairs</FluentLabel>
+        <FluentLabel Style="margin: 8px 0 16px;">Generate Ed25519 and secp256k1 key pairs. Explore signing, verification, and hashing.</FluentLabel>
+        <FluentAnchor Href="/keys" Appearance="Appearance.Accent">Explore</FluentAnchor>
+    </FluentCard>
 
-<div class="row mt-4">
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Key Pairs</h5>
-                <p class="card-text">Generate Ed25519 and secp256k1 key pairs. Explore signing, verification, and hashing.</p>
-                <a href="keys" class="btn btn-primary">Explore</a>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">DIDs</h5>
-                <p class="card-text">Create and resolve Decentralized Identifiers. Inspect DID Documents.</p>
-                <button class="btn btn-outline-secondary" disabled>Coming Soon</button>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Verifiable Credentials</h5>
-                <p class="card-text">Issue, hold, and verify credentials. Visualize the trust triangle.</p>
-                <button class="btn btn-outline-secondary" disabled>Coming Soon</button>
-            </div>
-        </div>
-    </div>
-</div>
+    <FluentCard AreaRestricted="false" Style="width: 300px; padding: 20px;">
+        <FluentLabel Typo="Typography.H5">DIDs</FluentLabel>
+        <FluentLabel Style="margin: 8px 0 16px;">Create and resolve Decentralized Identifiers. Inspect DID Documents.</FluentLabel>
+        <FluentButton Appearance="Appearance.Outline" Disabled="true">Coming Soon</FluentButton>
+    </FluentCard>
+
+    <FluentCard AreaRestricted="false" Style="width: 300px; padding: 20px;">
+        <FluentLabel Typo="Typography.H5">Verifiable Credentials</FluentLabel>
+        <FluentLabel Style="margin: 8px 0 16px;">Issue, hold, and verify credentials. Visualize the trust triangle.</FluentLabel>
+        <FluentButton Appearance="Appearance.Outline" Disabled="true">Coming Soon</FluentButton>
+    </FluentCard>
+
+    <FluentCard AreaRestricted="false" Style="width: 300px; padding: 20px;">
+        <FluentLabel Typo="Typography.H5">A2A</FluentLabel>
+        <FluentLabel Style="margin: 8px 0 16px;">Explore Google's Agent-to-Agent protocol — Agent Cards, OAuth-based auth, and task delegation between AI agents.</FluentLabel>
+        <FluentButton Appearance="Appearance.Outline" Disabled="true">Coming Soon</FluentButton>
+    </FluentCard>
+
+    <FluentCard AreaRestricted="false" Style="width: 300px; padding: 20px;">
+        <FluentLabel Typo="Typography.H5">UDAP</FluentLabel>
+        <FluentLabel Style="margin: 8px 0 16px;">Explore UDAP trust communities, authorization extensions, and certifications &amp; endorsements.</FluentLabel>
+        <FluentButton Appearance="Appearance.Outline" Disabled="true">Coming Soon</FluentButton>
+    </FluentCard>
+</FluentStack>

@@ -2,100 +2,78 @@
 @using TrustCartographer.Core.Models
 @using TrustCartographer.Core.Services
 @inject CryptoService Crypto
-@rendermode InteractiveServer
-
 <PageTitle>Key Pair Explorer</PageTitle>
 
-<h3>Key Pair Explorer</h3>
-<p class="text-muted">Generate cryptographic key pairs and explore signing & verification.</p>
+<FluentLabel Typo="Typography.H3" Style="margin-bottom: 4px;">Key Pair Explorer</FluentLabel>
+<FluentLabel Typo="Typography.Body" Style="margin-bottom: 16px; opacity: 0.7;">Generate cryptographic key pairs and explore signing &amp; verification.</FluentLabel>
 
-<div class="row mb-3">
-    <div class="col-auto">
-        <button class="btn btn-primary me-2" @onclick="GenerateEd25519">Generate Ed25519</button>
-        <button class="btn btn-secondary" @onclick="GenerateSecp256k1">Generate secp256k1</button>
-    </div>
-</div>
+<FluentStack Orientation="Orientation.Horizontal" Style="gap: 8px; margin-bottom: 24px;">
+    <FluentButton Appearance="Appearance.Accent" OnClick="GenerateEd25519">Generate Ed25519</FluentButton>
+    <FluentButton Appearance="Appearance.Outline" OnClick="GenerateSecp256k1">Generate secp256k1</FluentButton>
+</FluentStack>
 
 @if (_keyPair is not null)
 {
-    <div class="card mb-4">
-        <div class="card-header">
-            <strong>@_keyPair.Algorithm</strong> Key Pair
-        </div>
-        <div class="card-body">
-            <h6>Private Key</h6>
-            <div class="mb-2">
-                <label class="form-label text-muted mb-0">Hex (@(_keyPair.PrivateKey.Length) bytes)</label>
-                <code class="d-block text-break bg-light p-2 rounded">@_keyPair.PrivateKeyHex</code>
-            </div>
-            <div class="mb-3">
-                <label class="form-label text-muted mb-0">Base64url</label>
-                <code class="d-block text-break bg-light p-2 rounded">@_keyPair.PrivateKeyBase64Url</code>
-            </div>
+    <FluentCard AreaRestricted="false" Style="padding: 20px; margin-bottom: 16px;">
+        <FluentLabel Typo="Typography.H5" Style="margin-bottom: 12px;">@_keyPair.Algorithm Key Pair</FluentLabel>
 
-            <h6>Public Key</h6>
-            <div class="mb-2">
-                <label class="form-label text-muted mb-0">Hex (@(_keyPair.PublicKey.Length) bytes)</label>
-                <code class="d-block text-break bg-light p-2 rounded">@_keyPair.PublicKeyHex</code>
-            </div>
-            <div class="mb-3">
-                <label class="form-label text-muted mb-0">Base64url</label>
-                <code class="d-block text-break bg-light p-2 rounded">@_keyPair.PublicKeyBase64Url</code>
-            </div>
-        </div>
-    </div>
+        <FluentLabel Typo="Typography.H6">Private Key</FluentLabel>
+        <FluentLabel Style="opacity: 0.6; font-size: 0.85rem;">Hex (@(_keyPair.PrivateKey.Length) bytes)</FluentLabel>
+        <code style="display: block; word-break: break-all; padding: 8px; border-radius: 4px; margin-bottom: 8px; background: var(--neutral-layer-4);">@_keyPair.PrivateKeyHex</code>
+        <FluentLabel Style="opacity: 0.6; font-size: 0.85rem;">Base64url</FluentLabel>
+        <code style="display: block; word-break: break-all; padding: 8px; border-radius: 4px; margin-bottom: 16px; background: var(--neutral-layer-4);">@_keyPair.PrivateKeyBase64Url</code>
+
+        <FluentLabel Typo="Typography.H6">Public Key</FluentLabel>
+        <FluentLabel Style="opacity: 0.6; font-size: 0.85rem;">Hex (@(_keyPair.PublicKey.Length) bytes)</FluentLabel>
+        <code style="display: block; word-break: break-all; padding: 8px; border-radius: 4px; margin-bottom: 8px; background: var(--neutral-layer-4);">@_keyPair.PublicKeyHex</code>
+        <FluentLabel Style="opacity: 0.6; font-size: 0.85rem;">Base64url</FluentLabel>
+        <code style="display: block; word-break: break-all; padding: 8px; border-radius: 4px; background: var(--neutral-layer-4);">@_keyPair.PublicKeyBase64Url</code>
+    </FluentCard>
 
     @if (_keyPair.Algorithm == "Ed25519")
     {
-        <div class="card mb-4">
-            <div class="card-header"><strong>Sign & Verify</strong></div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label class="form-label">Message</label>
-                    <input type="text" class="form-control" @bind="_message" placeholder="Enter a message to sign..." />
-                </div>
-                <button class="btn btn-outline-primary me-2" @onclick="Sign">Sign</button>
-                <button class="btn btn-outline-success" @onclick="Verify" disabled="@(_signatureResult is null)">Verify</button>
+        <FluentCard AreaRestricted="false" Style="padding: 20px; margin-bottom: 16px;">
+            <FluentLabel Typo="Typography.H5" Style="margin-bottom: 12px;">Sign &amp; Verify</FluentLabel>
 
-                @if (_signatureResult is not null)
-                {
-                    <div class="mt-3">
-                        <label class="form-label text-muted mb-0">Signature (Hex)</label>
-                        <code class="d-block text-break bg-light p-2 rounded">@_signatureResult.SignatureHex</code>
-                    </div>
-                    <div class="mt-2">
-                        <label class="form-label text-muted mb-0">Signature (Base64url)</label>
-                        <code class="d-block text-break bg-light p-2 rounded">@_signatureResult.SignatureBase64Url</code>
-                    </div>
-                }
+            <FluentTextField @bind-Value="_message" Placeholder="Enter a message to sign..." Label="Message" Style="width: 100%; margin-bottom: 12px;" />
 
-                @if (_verificationResult is not null)
-                {
-                    <div class="alert @(_verificationResult.Value ? "alert-success" : "alert-danger") mt-3">
-                        Signature is <strong>@(_verificationResult.Value ? "VALID" : "INVALID")</strong>
-                    </div>
-                }
-            </div>
-        </div>
+            <FluentStack Orientation="Orientation.Horizontal" Style="gap: 8px; margin-bottom: 16px;">
+                <FluentButton Appearance="Appearance.Outline" OnClick="Sign">Sign</FluentButton>
+                <FluentButton Appearance="Appearance.Outline" OnClick="Verify" Disabled="@(_signatureResult is null)">Verify</FluentButton>
+            </FluentStack>
+
+            @if (_signatureResult is not null)
+            {
+                <FluentLabel Style="opacity: 0.6; font-size: 0.85rem;">Signature (Hex)</FluentLabel>
+                <code style="display: block; word-break: break-all; padding: 8px; border-radius: 4px; margin-bottom: 8px; background: var(--neutral-layer-4);">@_signatureResult.SignatureHex</code>
+                <FluentLabel Style="opacity: 0.6; font-size: 0.85rem;">Signature (Base64url)</FluentLabel>
+                <code style="display: block; word-break: break-all; padding: 8px; border-radius: 4px; margin-bottom: 8px; background: var(--neutral-layer-4);">@_signatureResult.SignatureBase64Url</code>
+            }
+
+            @if (_verificationResult is not null)
+            {
+                <FluentMessageBar Intent="@(_verificationResult.Value ? MessageIntent.Success : MessageIntent.Error)" Style="margin-top: 8px;">
+                    Signature is <strong>@(_verificationResult.Value ? "VALID" : "INVALID")</strong>
+                </FluentMessageBar>
+            }
+        </FluentCard>
     }
 
-    <div class="card mb-4">
-        <div class="card-header"><strong>SHA-256 Hash</strong></div>
-        <div class="card-body">
-            <div class="mb-3">
-                <label class="form-label">Input</label>
-                <input type="text" class="form-control" @bind="_hashInput" placeholder="Enter text to hash..." />
+    <FluentCard AreaRestricted="false" Style="padding: 20px; margin-bottom: 16px;">
+        <FluentLabel Typo="Typography.H5" Style="margin-bottom: 12px;">SHA-256 Hash</FluentLabel>
+
+        <FluentTextField @bind-Value="_hashInput" Placeholder="Enter text to hash..." Label="Input" Style="width: 100%; margin-bottom: 12px;" />
+
+        <FluentButton Appearance="Appearance.Outline" OnClick="ComputeHash">Hash</FluentButton>
+
+        @if (_hashOutput is not null)
+        {
+            <div style="margin-top: 12px;">
+                <FluentLabel Style="opacity: 0.6; font-size: 0.85rem;">SHA-256 (Hex)</FluentLabel>
+                <code style="display: block; word-break: break-all; padding: 8px; border-radius: 4px; background: var(--neutral-layer-4);">@Convert.ToHexString(_hashOutput).ToLowerInvariant()</code>
             </div>
-            <button class="btn btn-outline-primary" @onclick="ComputeHash">Hash</button>
-            @if (_hashOutput is not null)
-            {
-                <div class="mt-3">
-                    <label class="form-label text-muted mb-0">SHA-256 (Hex)</label>
-                    <code class="d-block text-break bg-light p-2 rounded">@Convert.ToHexString(_hashOutput).ToLowerInvariant()</code>
-                </div>
-            }
-        </div>
-    </div>
+        }
+    </FluentCard>
 }
 
 @code {

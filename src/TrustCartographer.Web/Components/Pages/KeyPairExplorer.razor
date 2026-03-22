@@ -1,0 +1,145 @@
+@page "/keys"
+@using TrustCartographer.Core.Models
+@using TrustCartographer.Core.Services
+@inject CryptoService Crypto
+@rendermode InteractiveServer
+
+<PageTitle>Key Pair Explorer</PageTitle>
+
+<h3>Key Pair Explorer</h3>
+<p class="text-muted">Generate cryptographic key pairs and explore signing & verification.</p>
+
+<div class="row mb-3">
+    <div class="col-auto">
+        <button class="btn btn-primary me-2" @onclick="GenerateEd25519">Generate Ed25519</button>
+        <button class="btn btn-secondary" @onclick="GenerateSecp256k1">Generate secp256k1</button>
+    </div>
+</div>
+
+@if (_keyPair is not null)
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            <strong>@_keyPair.Algorithm</strong> Key Pair
+        </div>
+        <div class="card-body">
+            <h6>Private Key</h6>
+            <div class="mb-2">
+                <label class="form-label text-muted mb-0">Hex (@(_keyPair.PrivateKey.Length) bytes)</label>
+                <code class="d-block text-break bg-light p-2 rounded">@_keyPair.PrivateKeyHex</code>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted mb-0">Base64url</label>
+                <code class="d-block text-break bg-light p-2 rounded">@_keyPair.PrivateKeyBase64Url</code>
+            </div>
+
+            <h6>Public Key</h6>
+            <div class="mb-2">
+                <label class="form-label text-muted mb-0">Hex (@(_keyPair.PublicKey.Length) bytes)</label>
+                <code class="d-block text-break bg-light p-2 rounded">@_keyPair.PublicKeyHex</code>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted mb-0">Base64url</label>
+                <code class="d-block text-break bg-light p-2 rounded">@_keyPair.PublicKeyBase64Url</code>
+            </div>
+        </div>
+    </div>
+
+    @if (_keyPair.Algorithm == "Ed25519")
+    {
+        <div class="card mb-4">
+            <div class="card-header"><strong>Sign & Verify</strong></div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Message</label>
+                    <input type="text" class="form-control" @bind="_message" placeholder="Enter a message to sign..." />
+                </div>
+                <button class="btn btn-outline-primary me-2" @onclick="Sign">Sign</button>
+                <button class="btn btn-outline-success" @onclick="Verify" disabled="@(_signatureResult is null)">Verify</button>
+
+                @if (_signatureResult is not null)
+                {
+                    <div class="mt-3">
+                        <label class="form-label text-muted mb-0">Signature (Hex)</label>
+                        <code class="d-block text-break bg-light p-2 rounded">@_signatureResult.SignatureHex</code>
+                    </div>
+                    <div class="mt-2">
+                        <label class="form-label text-muted mb-0">Signature (Base64url)</label>
+                        <code class="d-block text-break bg-light p-2 rounded">@_signatureResult.SignatureBase64Url</code>
+                    </div>
+                }
+
+                @if (_verificationResult is not null)
+                {
+                    <div class="alert @(_verificationResult.Value ? "alert-success" : "alert-danger") mt-3">
+                        Signature is <strong>@(_verificationResult.Value ? "VALID" : "INVALID")</strong>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <div class="card mb-4">
+        <div class="card-header"><strong>SHA-256 Hash</strong></div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label">Input</label>
+                <input type="text" class="form-control" @bind="_hashInput" placeholder="Enter text to hash..." />
+            </div>
+            <button class="btn btn-outline-primary" @onclick="ComputeHash">Hash</button>
+            @if (_hashOutput is not null)
+            {
+                <div class="mt-3">
+                    <label class="form-label text-muted mb-0">SHA-256 (Hex)</label>
+                    <code class="d-block text-break bg-light p-2 rounded">@Convert.ToHexString(_hashOutput).ToLowerInvariant()</code>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private KeyPairInfo? _keyPair;
+    private string _message = string.Empty;
+    private SignatureResult? _signatureResult;
+    private bool? _verificationResult;
+    private string _hashInput = string.Empty;
+    private byte[]? _hashOutput;
+
+    private void GenerateEd25519()
+    {
+        _keyPair = Crypto.GenerateEd25519KeyPair();
+        ResetSignature();
+    }
+
+    private void GenerateSecp256k1()
+    {
+        _keyPair = Crypto.GenerateSecp256k1KeyPair();
+        ResetSignature();
+    }
+
+    private void Sign()
+    {
+        if (_keyPair is null || string.IsNullOrEmpty(_message)) return;
+        _signatureResult = Crypto.SignEd25519(_keyPair.PrivateKey, _message);
+        _verificationResult = null;
+    }
+
+    private void Verify()
+    {
+        if (_keyPair is null || _signatureResult is null) return;
+        _verificationResult = Crypto.VerifyEd25519(_keyPair.PublicKey, _message, _signatureResult.Signature);
+    }
+
+    private void ComputeHash()
+    {
+        if (string.IsNullOrEmpty(_hashInput)) return;
+        _hashOutput = Crypto.ComputeSha256(_hashInput);
+    }
+
+    private void ResetSignature()
+    {
+        _signatureResult = null;
+        _verificationResult = null;
+    }
+}

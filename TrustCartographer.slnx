@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TrustCartographer.Core/TrustCartographer.Core.csproj" />
+    <Project Path="src/TrustCartographer.Web/TrustCartographer.Web.csproj" />
+  </Folder>
+</Solution>

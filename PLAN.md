@@ -89,20 +89,21 @@ TrustCartographer/
   - **DIDComm-based agent auth** — peer DIDs, signed messages, no central authority
   - **A2A-style agent auth** — Agent Cards, OAuth token exchange, centralized IdP
   - **UDAP-style agent auth** — Authorization Extension Objects, certifications, trust communities
+  - **AAuth (Agent Auth)** — cryptographic agent identity with message signing, no bearer tokens, deferred authorization (HTTP 202 + polling), progressive auth levels, agent identity delegation
 - [ ] Visualize the trust chain in each — where does trust originate?
 
 ## Comparative Trust Model Reference
 
 ### Where Google A2A Sits
 
-| Layer | SSI / Decentralized | Google A2A | UDAP |
-|---|---|---|---|
-| **Discovery** | DID Resolution -> DID Document | Agent Card (`/.well-known/agent.json`) | UDAP Metadata (`/.well-known/udap`) |
-| **Authentication** | DIDs + cryptographic proofs | OAuth 2.0, OpenID Connect, API keys | X.509 + dynamic client registration |
-| **Communication** | DIDComm messaging | HTTP + JSON-RPC, SSE | FHIR + signed metadata (JWT) |
-| **Trust** | VCs, trust frameworks | Delegated via OAuth scopes, enterprise IAM | Certifications & Endorsements, Trust Communities |
-| **Identity anchor** | Blockchain / decentralized ledger | Centralized identity providers | X.509 certificate chains + trust communities |
-| **Purpose of use** | VC claims (limited) | OAuth scopes (limited) | Authorization Extension Object (rich, propagated) |
+| Layer | SSI / Decentralized | Google A2A | UDAP | AAuth |
+|---|---|---|---|---|
+| **Discovery** | DID Resolution -> DID Document | Agent Card (`/.well-known/agent.json`) | UDAP Metadata (`/.well-known/udap`) | Agent identity via cryptographic key registration |
+| **Authentication** | DIDs + cryptographic proofs | OAuth 2.0, OpenID Connect, API keys | X.509 + dynamic client registration | Cryptographic agent identity + message signing (no bearer tokens) |
+| **Communication** | DIDComm messaging | HTTP + JSON-RPC, SSE | FHIR + signed metadata (JWT) | HTTP with signed requests, HTTP 202 deferred responses + polling |
+| **Trust** | VCs, trust frameworks | Delegated via OAuth scopes, enterprise IAM | Certifications & Endorsements, Trust Communities | Progressive authentication levels, agent identity delegation |
+| **Identity anchor** | Blockchain / decentralized ledger | Centralized identity providers | X.509 certificate chains + trust communities | Cryptographic key pairs bound to agent identity |
+| **Purpose of use** | VC claims (limited) | OAuth scopes (limited) | Authorization Extension Object (rich, propagated) | Interaction/clarification mechanisms (agents explain intended actions) |
 
 ### UDAP Mapping to SSI Concepts
 
@@ -114,6 +115,21 @@ TrustCartographer/
 | Signed metadata (JWT) | DID Documents + cryptographic proofs | Machine-readable trust anchors |
 | X.509 + UDAP dynamic registration | DIDs + DIDComm connection protocol | How agents establish relationships |
 
+### AAuth Key Concepts
+
+**AAuth (Agent Auth)** is a protocol originally conceived by OAuth 2.0 creator Dick Hardt, now maturing into an IETF internet draft. It reimagines authentication specifically for autonomous AI agents.
+
+| Feature | Description |
+|---|---|
+| **No bearer tokens** | Eliminates bearer tokens entirely; uses cryptographic agent identity with message signing |
+| **Deferred authorization** | Auth flow returns HTTP 202 with polling locations, enabling async user consent |
+| **Progressive auth levels** | Agents can escalate authentication as needed for higher-privilege operations |
+| **Agent identity delegation** | Agents can delegate identity to sub-agents in a verifiable chain |
+| **Interaction/clarification** | Users can ask agents to explain intended actions before granting consent |
+| **Consent mechanisms** | Browser redirects, backchannel communication, or clarification requests |
+
+**Reference:** [Christian Posta's overview of AAuth](https://www.linkedin.com/posts/ceposta_aauth-aauth-agent-share-7445132802590945280-8Jud/) — includes links to the IETF draft specification, demo examples, Keycloak SPI extension, and agent gateway releases.
+
 ## Resources
 
 - **W3C DID Core spec** — the definitive reference for DIDs
@@ -121,6 +137,7 @@ TrustCartographer/
 - **Decentralized Identity Foundation (DIF)** — protocols and working groups
 - **Hyperledger Aries RFCs** — practical agent/credential exchange protocols
 - **ToIP (Trust over IP) Foundation** — governance and trust framework layers
+- **AAuth IETF Draft** — agent authentication protocol by Dick Hardt (see Christian Posta's post above for links to spec, demos, and implementations)
 
 ## Repository
 

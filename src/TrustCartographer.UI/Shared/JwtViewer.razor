@@ -1,0 +1,20 @@
+@if (!string.IsNullOrEmpty(parseError))
+{
+    <div class="tc-jwt-error">@parseError</div>
+}
+else if (formattedHeader != null && formattedPayload != null)
+{
+    <div class="tc-jwt-viewer">
+        <div class="tc-jwt-section-label">HEADER</div>
+        <pre class="tc-jwt-json">@((MarkupString)formattedHeader)</pre>
+
+        <div class="tc-jwt-section-label">PAYLOAD</div>
+        <pre class="tc-jwt-json">@((MarkupString)formattedPayload)</pre>
+
+        @if (!string.IsNullOrEmpty(rawSignature))
+        {
+            <div class="tc-jwt-section-label">SIGNATURE (base64url)</div>
+            <pre class="tc-jwt-json tc-jwt-signature">@rawSignature</pre>
+        }
+    </div>
+}

@@ -9,9 +9,14 @@ These documents capture the *thinking* behind the project — paradigm choices, 
 ```
 docs/
 ├── README.md                            # this file
+├── project-layout.md                    # three-project structure (Core / UI / Web) + MAUI-ready story
 ├── sigil-and-trustcartographer.md       # roles, paradigm, seams sketch
 ├── pki-vs-ssi.md                        # concept mapping, where SSI diverges
 ├── phased-roadmap.md                    # Phases A–F for adding DID/VC to Sigil
+├── sigil-phase-a-d-plan.md              # pointer: A+D implementation status in Sigil repo
+├── walkthroughs/
+│   ├── README.md                        # index of walkthroughs + how to add more
+│   └── practitioner-license.md          # learning guide for the Practitioner License walkthrough
 └── qa/
     └── openid-in-did-space.md           # what OpenID does in the DID space
 ```
@@ -24,6 +29,8 @@ For a new contributor or future-you returning to the project:
 2. **`pki-vs-ssi.md`** — The mental model and concept mapping. Where SSI genuinely diverges from PKI (don't flatten one into the other).
 3. **`phased-roadmap.md`** — The actual build order for Sigil's DID/VC support, Phases A–F. Cross-references to `../specs/`.
 4. **`qa/openid-in-did-space.md`** — Snippet-level Q&A. The `qa/` folder is for these as they come up.
+5. **`walkthroughs/`** — Learning guides paired with interactive Razor pages in `TrustCartographer.UI`. Start here when you want to *use* the project to learn DIDs/VCs hands-on rather than read about them in the abstract.
+6. **`project-layout.md`** — Three-project structure (`Core` / `UI` / `Web`) and why it's split that way. Read this if you're adding new code and unsure where it goes, or if you want to add a MAUI/iPad host later.
 
 ## Conventions
 

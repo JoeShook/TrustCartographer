@@ -143,5 +143,6 @@ The two repos stay loosely coupled. TrustCartographer can always run on toy data
 
 - `sigil-and-trustcartographer.md` — roles and seams
 - `pki-vs-ssi.md` — concept mapping
+- `sigil-phase-a-d-plan.md` — Phase A + D implementation in the Sigil repo (pointer)
 - `qa/openid-in-did-space.md` — where OID4VC fits
 - `../specs/README.md` — specs grounding each phase

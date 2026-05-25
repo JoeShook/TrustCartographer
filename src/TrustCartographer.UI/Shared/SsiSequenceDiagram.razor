@@ -1,0 +1,151 @@
+@using System.Globalization
+
+<div class="tc-seq-diagram">
+    @* Participant header boxes — evenly spaced columns *@
+    <div class="tc-seq-header" style="grid-template-columns: repeat(@Actors.Count, 1fr);">
+        @foreach (var actor in Actors)
+        {
+            <div class="tc-seq-participant tc-seq-participant-@actor.Key"
+                 title="@actor.Tooltip">
+                <div style="font-weight: 600;">@actor.Label</div>
+                @if (!string.IsNullOrEmpty(actor.Sublabel))
+                {
+                    <div style="font-size: 0.7rem; opacity: 0.6;">@actor.Sublabel</div>
+                }
+            </div>
+        }
+    </div>
+
+    @* Body: lifelines + rows *@
+    <div class="tc-seq-body">
+        @for (var i = 0; i < Actors.Count; i++)
+        {
+            <div class="tc-seq-lifeline" style="left: @(ColumnPercent(i));"></div>
+        }
+
+        @for (var stepIndex = 0; stepIndex < Steps.Count; stepIndex++)
+        {
+            // Capture the loop variable into a local — @onclick lambdas would otherwise close over
+            // the same `stepIndex` reference and all fire with Steps.Count at click time.
+            var capturedIndex = stepIndex;
+            var step = Steps[capturedIndex];
+            var visible = capturedIndex <= CurrentIndex;
+            var fromIdx = ActorIndex(step.FromKey);
+            var toIdx = ActorIndex(step.ToKey);
+
+            var selectedClass = SelectedStepIndex == capturedIndex ? "tc-seq-row-selected" : "";
+
+            if (step.IsLocalAction || fromIdx == toIdx)
+            {
+                <div class="tc-seq-row tc-seq-row-sm @selectedClass">
+                    @if (visible)
+                    {
+                        <div class="tc-seq-note-box" style="left: @ColumnPercent(fromIdx);">
+                            <div class="tc-seq-note tc-seq-anim-fade @OutcomeClass(step.Outcome)">
+                                @step.Label
+                                @if (HasPayload(step))
+                                {
+                                    <button class="tc-seq-message-btn" @onclick="@(() => TogglePayload(capturedIndex))"
+                                            title="@step.PayloadLabel">&#x1F4E8;</button>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                var leftIdx = Math.Min(fromIdx, toIdx);
+                var rightIdx = Math.Max(fromIdx, toIdx);
+                var leftPct = ColumnPercent(leftIdx);
+                var rightPct = ColumnPercent(rightIdx);
+                var arrowRight = fromIdx < toIdx;
+
+                <div class="tc-seq-row @selectedClass">
+                    @if (visible)
+                    {
+                        <div class="tc-seq-arrow-box" style="left: @leftPct; right: calc(100% - @rightPct);">
+                            <div class="@OutcomeClass(step.Outcome) @(arrowRight ? "tc-seq-anim-slide-right" : "tc-seq-anim-slide-left")">
+                                @if (HasPayload(step))
+                                {
+                                    <div class="tc-seq-envelope-row">
+                                        <button class="tc-seq-message-btn" @onclick="@(() => TogglePayload(capturedIndex))"
+                                                title="@step.PayloadLabel">&#x1F4E8;</button>
+                                    </div>
+                                }
+                                <div class="tc-seq-arrow-label-row">
+                                    <div class="tc-seq-arrow-label">@step.Label</div>
+                                </div>
+                                @if (!string.IsNullOrEmpty(step.HttpMethod))
+                                {
+                                    <div class="tc-seq-http-row">
+                                        <span class="tc-seq-http-method tc-seq-http-method-@step.HttpMethod.ToLowerInvariant()">@step.HttpMethod</span>
+                                        <span class="tc-seq-http-path">@step.HttpPath</span>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrEmpty(step.Sublabel))
+                                {
+                                    <div class="tc-seq-arrow-sublabel">@step.Sublabel</div>
+                                }
+                                <div class="tc-seq-arrow-line-container">
+                                    @if (arrowRight)
+                                    {
+                                        <div class="tc-seq-arrow-line"></div>
+                                        <div class="tc-seq-arrow-head-right"></div>
+                                    }
+                                    else
+                                    {
+                                        <div class="tc-seq-arrow-head-left"></div>
+                                        <div class="tc-seq-arrow-line"></div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+
+            @* Inline payload panel right after the step it belongs to *@
+            @if (visible && openPayloadIndices.Contains(capturedIndex) && HasPayload(step))
+            {
+                <div class="tc-seq-row tc-seq-row-sm">
+                    <div class="tc-seq-payload-panel">
+                        <button class="tc-seq-payload-close" @onclick="@(() => ClosePayload(capturedIndex))" title="Close">&times;</button>
+                        @if (!string.IsNullOrEmpty(step.PayloadJwt))
+                        {
+                            <div class="tc-seq-payload-title">@step.PayloadLabel</div>
+                            <JwtViewer Token="@step.PayloadJwt" />
+                        }
+                        else if (!string.IsNullOrEmpty(step.PayloadJson))
+                        {
+                            <div class="tc-seq-payload-title">@step.PayloadLabel</div>
+                            <pre class="tc-seq-payload-json">@step.PayloadJson</pre>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    @* Result bar *@
+    @if (Complete)
+    {
+        <div class="tc-seq-result @(Success ? "tc-seq-pass" : "tc-seq-fail") tc-seq-anim-fade">
+            <span style="font-size: 1.3rem;">@(Success ? "✅" : "❌")</span>
+            <span>
+                @(Success ? "VERIFIED" : "REJECTED")
+                @if (!string.IsNullOrEmpty(FailureReason))
+                {
+                    <span> &mdash; @FailureReason</span>
+                }
+            </span>
+        </div>
+    }
+    else if (CurrentIndex >= 0)
+    {
+        <div class="tc-seq-result tc-seq-pending">
+            <span class="tc-seq-spinner"></span>
+            <span>Step @(CurrentIndex + 1) of @Steps.Count</span>
+        </div>
+    }
+</div>

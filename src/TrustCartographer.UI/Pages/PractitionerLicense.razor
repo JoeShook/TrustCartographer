@@ -1,0 +1,215 @@
+@page "/practitioner-license"
+
+<PageTitle>Practitioner License — SSI Walkthrough</PageTitle>
+
+<div class="page-header">
+    <FluentLabel Typo="Typography.PageTitle">Practitioner License Credential</FluentLabel>
+    <div class="page-subtitle">
+        State Medical Board issues a VC asserting Dr. Smith is a licensed MD; Hospital EHR verifies it.
+    </div>
+</div>
+
+<div class="control-bar">
+    <FluentButton Appearance="Appearance.Accent" OnClick="StepForward"
+                  Disabled="@(currentIndex >= steps.Count - 1 || isPlaying)"
+                  Size="ButtonSize.Small"
+                  IconStart="@(new RegularIcons.Size16.Play())">
+        @(currentIndex < 0 ? "Start" : "Next")
+    </FluentButton>
+    <FluentButton Appearance="Appearance.Outline" OnClick="PlayAll"
+                  Disabled="@(currentIndex >= steps.Count - 1 || isPlaying)"
+                  Size="ButtonSize.Small">
+        @(isPlaying ? "Playing…" : "Play to end")
+    </FluentButton>
+    <FluentButton Appearance="Appearance.Outline" OnClick="Reset"
+                  Size="ButtonSize.Small"
+                  IconStart="@(new RegularIcons.Size16.ArrowCounterclockwise())">
+        Reset
+    </FluentButton>
+    <span class="control-divider"></span>
+    <span class="control-label">Tamper:</span>
+    <FluentRadioGroup TValue="TamperMode" Value="@tamperMode" ValueChanged="OnTamperChanged" Orientation="Orientation.Horizontal">
+        <FluentRadio Value="@TamperMode.None">Happy path</FluentRadio>
+        <FluentRadio Value="@TamperMode.TamperedSignature">Tampered signature</FluentRadio>
+        <FluentRadio Value="@TamperMode.UnknownIssuer">Unknown issuer key</FluentRadio>
+        <FluentRadio Value="@TamperMode.Expired">Expired credential</FluentRadio>
+    </FluentRadioGroup>
+</div>
+
+<div class="diagram-wrap">
+    <SsiSequenceDiagram Actors="@actors" Steps="@steps" CurrentIndex="@currentIndex"
+                        SelectedStepIndex="@selectedStepIndex"
+                        Complete="@isComplete" Success="@verifySuccess" FailureReason="@failureReason" />
+</div>
+
+<div class="step-list">
+    @if (currentIndex < 0)
+    {
+        <div class="step-list-empty">
+            Click <strong>Start</strong> to begin. Each step advances the trust triangle one move.
+        </div>
+    }
+    else
+    {
+        @for (var i = 0; i <= currentIndex; i++)
+        {
+            var capturedIdx = i;
+            var step = steps[capturedIdx];
+            var isSelected = selectedStepIndex == capturedIdx;
+            <div class="step-item @(isSelected ? "step-item-selected" : "")"
+                 @onclick="@(() => SelectStep(capturedIdx))">
+                <div class="step-item-header">
+                    <span class="step-number">@(capturedIdx + 1)</span>
+                    <span class="step-label">@step.Label</span>
+                    @if (!isSelected)
+                    {
+                        <span class="step-expand-hint">click to expand</span>
+                    }
+                </div>
+                @if (isSelected)
+                {
+                    <div class="step-item-body">
+                        @((MarkupString)stepExplanations[capturedIdx])
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private enum TamperMode { None, TamperedSignature, UnknownIssuer, Expired }
+}
+
+<style>
+    .page-header {
+        margin-bottom: 0.6rem;
+    }
+
+    .page-subtitle {
+        font-size: 0.85rem;
+        opacity: 0.7;
+        margin-top: 0.1rem;
+    }
+
+    /* ── Single-row control bar ── */
+    .control-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        padding: 0.5rem 0.75rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 6px;
+        margin-bottom: 0.5rem;
+    }
+
+    .control-divider {
+        width: 1px;
+        height: 1.3rem;
+        background: rgba(255, 255, 255, 0.15);
+        margin: 0 0.25rem;
+    }
+
+    .control-label {
+        font-size: 0.78rem;
+        opacity: 0.7;
+        font-weight: 600;
+    }
+
+    /* ── Diagram ── */
+    .diagram-wrap {
+        overflow-x: auto;
+        margin-bottom: 0.5rem;
+    }
+
+    /* ── Stepped explanation list ── */
+    .step-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .step-list-empty {
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 6px;
+        font-size: 0.9rem;
+        opacity: 0.85;
+    }
+
+    .step-item {
+        padding: 0.45rem 0.75rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+    }
+
+    .step-item:hover {
+        background: rgba(100, 181, 246, 0.07);
+        border-color: rgba(100, 181, 246, 0.3);
+    }
+
+    .step-item-selected {
+        background: rgba(100, 181, 246, 0.10);
+        border-color: rgba(100, 181, 246, 0.5);
+        box-shadow: inset 4px 0 0 #64b5f6;
+        cursor: default;
+    }
+
+    .step-item-header {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .step-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.5rem;
+        height: 1.5rem;
+        padding: 0 0.4rem;
+        border-radius: 50%;
+        background: rgba(100, 181, 246, 0.15);
+        color: #90caf9;
+        font-size: 0.75rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    .step-item-selected .step-number {
+        background: #64b5f6;
+        color: #0f1419;
+    }
+
+    .step-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        flex: 1;
+    }
+
+    .step-expand-hint {
+        font-size: 0.7rem;
+        opacity: 0;
+        transition: opacity 0.15s;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .step-item:hover .step-expand-hint {
+        opacity: 0.5;
+    }
+
+    .step-item-body {
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 0.85rem;
+        line-height: 1.5;
+    }
+</style>

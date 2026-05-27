@@ -1,0 +1,70 @@
+@page "/live-flow"
+@using TrustCartographer.UI.Live
+@implements IDisposable
+@inject ITrafficLog TrafficLog
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Nav
+
+<PageTitle>Live Flow — TrustCartographer</PageTitle>
+
+<h1>Live Flow</h1>
+<p class="muted">
+    Real HTTP traffic captured by the YARP reverse proxy as the Holder wallet
+    redeems a credential offer from the Issuer. Each row is one wire exchange
+    — click to inspect the request / response bodies.
+</p>
+
+<div class="live-flow__toolbar">
+    <FluentButton Appearance="Appearance.Accent"
+                  Disabled="@isRunning"
+                  OnClick="TriggerIssuanceAsync">
+        @(isRunning ? "Running…" : "Trigger credential issuance")
+    </FluentButton>
+    <FluentButton Appearance="Appearance.Neutral"
+                  OnClick="ClearLog">
+        Clear log
+    </FluentButton>
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <span class="live-flow__error">@errorMessage</span>
+    }
+</div>
+
+<div class="live-flow__entries">
+    @if (entries.Count == 0)
+    {
+        <p class="muted"><em>No traffic captured yet. Click <strong>Trigger credential issuance</strong> to start.</em></p>
+    }
+    else
+    {
+        @foreach (var (entry, idx) in entries.Select((e, i) => (e, i)))
+        {
+            var capturedIdx = idx;
+            var isOpen = openIndexes.Contains(capturedIdx);
+            <div class="live-flow__row @(isOpen ? "is-open" : "")"
+                 @onclick="() => Toggle(capturedIdx)">
+                <span class="live-flow__time">@entry.Timestamp.ToLocalTime().ToString("HH:mm:ss.fff")</span>
+                <span class="live-flow__method live-flow__method--@entry.Method.ToLower()">@entry.Method</span>
+                <span class="live-flow__to">→ @entry.To</span>
+                <span class="live-flow__path">@entry.Path</span>
+                <span class="live-flow__status @(StatusClass(entry.StatusCode))">@entry.StatusCode</span>
+                <span class="live-flow__duration">@entry.DurationMs ms</span>
+            </div>
+            @if (isOpen)
+            {
+                <div class="live-flow__detail">
+                    <div class="live-flow__pane">
+                        <h4>Request</h4>
+                        <div class="muted">@entry.RequestContentType · @entry.RequestBodyBytes bytes @(entry.RequestBodyTruncated ? "(truncated)" : "")</div>
+                        <pre>@RenderBody(entry.RequestBody, entry.RequestContentType)</pre>
+                    </div>
+                    <div class="live-flow__pane">
+                        <h4>Response</h4>
+                        <div class="muted">@entry.ResponseContentType · @entry.ResponseBodyBytes bytes @(entry.ResponseBodyTruncated ? "(truncated)" : "")</div>
+                        <pre>@RenderBody(entry.ResponseBody, entry.ResponseContentType)</pre>
+                    </div>
+                </div>
+            }
+        }
+    }
+</div>

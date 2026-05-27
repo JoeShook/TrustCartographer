@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using TrustCartographer.UI.Live;
 
 namespace TrustCartographer.Web.Services;
 
@@ -7,7 +8,7 @@ namespace TrustCartographer.Web.Services;
 /// No audit, no persistence, no external sinks. The Live Flow page subscribes
 /// to <see cref="OnNewEntry"/> to render exchanges in real time.
 /// </summary>
-public sealed class TrafficLog
+public sealed class TrafficLog : ITrafficLog
 {
     private const int MaxEntries = 500;
     private readonly ConcurrentQueue<TrafficEntry> _entries = new();

@@ -1,0 +1,107 @@
+.muted {
+    color: var(--neutral-foreground-hint, #888);
+    font-size: 0.9em;
+}
+
+.live-flow__toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1rem 0 1.25rem;
+}
+
+.live-flow__error {
+    color: var(--accent-foreground-error-rest, #d13438);
+    font-weight: 500;
+}
+
+.live-flow__entries {
+    border-top: 1px solid var(--neutral-stroke-divider-rest, #ddd);
+}
+
+.live-flow__row {
+    display: grid;
+    grid-template-columns: 110px 70px 90px 1fr 70px 80px;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid var(--neutral-stroke-divider-rest, #eee);
+    cursor: pointer;
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+}
+
+.live-flow__row:hover {
+    background: var(--neutral-fill-stealth-hover, #f6f6f6);
+}
+
+.live-flow__row.is-open {
+    background: var(--neutral-fill-stealth-rest, #f0f0f0);
+}
+
+.live-flow__time {
+    color: var(--neutral-foreground-hint, #888);
+}
+
+.live-flow__method {
+    font-weight: 700;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    text-align: center;
+}
+
+.live-flow__method--get { background: #e6f4ea; color: #137333; }
+.live-flow__method--post { background: #fef7e0; color: #b06000; }
+.live-flow__method--put { background: #e8f0fe; color: #1a73e8; }
+.live-flow__method--delete { background: #fce8e6; color: #c5221f; }
+
+.live-flow__to {
+    color: var(--neutral-foreground-rest);
+    font-weight: 600;
+}
+
+.live-flow__path {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.live-flow__status {
+    text-align: center;
+    font-weight: 600;
+}
+
+.live-flow__status--ok { color: #137333; }
+.live-flow__status--redir { color: #b06000; }
+.live-flow__status--client-err { color: #c5221f; }
+.live-flow__status--server-err { color: #b00020; font-weight: 700; }
+
+.live-flow__duration {
+    text-align: right;
+    color: var(--neutral-foreground-hint, #888);
+}
+
+.live-flow__detail {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    padding: 0.75rem 1rem 1rem;
+    background: var(--neutral-fill-stealth-rest, #fafafa);
+    border-bottom: 1px solid var(--neutral-stroke-divider-rest, #eee);
+}
+
+.live-flow__pane h4 {
+    margin: 0 0 0.25rem;
+}
+
+.live-flow__pane pre {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    border-radius: 4px;
+    padding: 0.6rem 0.8rem;
+    overflow: auto;
+    max-height: 400px;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    margin: 0.25rem 0 0;
+}

@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TrustCartographer.ServiceDefaults\TrustCartographer.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\TrustCartographer.Core\TrustCartographer.Core.csproj" />
   </ItemGroup>
 
 </Project>

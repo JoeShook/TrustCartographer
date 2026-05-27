@@ -1,5 +1,6 @@
 using Microsoft.FluentUI.AspNetCore.Components;
 using TrustCartographer.Core.Services;
+using TrustCartographer.UI.Live;
 using TrustCartographer.Web.Components;
 using TrustCartographer.Web.Services;
 
@@ -13,8 +14,16 @@ builder.Services.AddSingleton<CryptoService>();
 builder.Services.AddSingleton<DidKeyService>();
 builder.Services.AddSingleton<VcService>();
 
-// Visualization-only traffic capture.
+// Visualization-only traffic capture. Same singleton serves both as the
+// concrete TrafficLog (middleware writes to it) and as ITrafficLog (LiveFlow
+// page reads + subscribes through the RCL abstraction).
 builder.Services.AddSingleton<TrafficLog>();
+builder.Services.AddSingleton<ITrafficLog>(sp => sp.GetRequiredService<TrafficLog>());
+
+// LiveFlow page POSTs back through the proxy to /issuer/* and /holder/*. The
+// BaseAddress is resolved at request time from NavigationManager.BaseUri so
+// dev port changes don't require config.
+builder.Services.AddHttpClient("loopback");
 
 // YARP reverse proxy in front of Issuer / Holder / Verifier.
 // Service-discovery destination resolver lets "http://issuer" etc. resolve

@@ -1,0 +1,45 @@
+@page "/"
+@inject IssuerKeyMaterial Keys
+@inject CredentialCatalog Catalog
+
+<PageTitle>State Medical Board (Issuer)</PageTitle>
+
+<h1>State Medical Board</h1>
+<p class="muted">
+    OID4VCI 1.0 credential issuer. Mints <code>jwt_vc_json</code> credentials
+    bound to a Holder's <code>did:key</code> after a real proof-of-possession
+    handshake.
+</p>
+
+<FluentCard Style="margin-bottom: 1rem;">
+    <h3>Issuer Identity</h3>
+    <FluentLabel Typo="Typography.Body">DID</FluentLabel>
+    <pre class="codeblock">@Keys.Did</pre>
+    <FluentLabel Typo="Typography.Body">Verification Method</FluentLabel>
+    <pre class="codeblock">@Keys.VerificationMethodId</pre>
+    <FluentLabel Typo="Typography.Body">Ed25519 public key (hex)</FluentLabel>
+    <pre class="codeblock">@PublicKeyHex</pre>
+</FluentCard>
+
+<FluentCard>
+    <h3>Supported credentials</h3>
+    <ul>
+        @foreach (var (id, cfg) in Catalog.SupportedConfigurations)
+        {
+            <li>
+                <strong>@id</strong>
+                — format <code>@cfg.Format</code>, alg <code>@string.Join(", ", cfg.CredentialSigningAlgValuesSupported ?? [])</code>
+            </li>
+        }
+    </ul>
+    <p class="muted">
+        Inspect the raw metadata at
+        <a href="/.well-known/openid-credential-issuer" target="_blank">/.well-known/openid-credential-issuer</a>
+        and
+        <a href="/.well-known/oauth-authorization-server" target="_blank">/.well-known/oauth-authorization-server</a>.
+    </p>
+</FluentCard>
+
+@code {
+    private string PublicKeyHex => Convert.ToHexString(Keys.KeyPair.PublicKey).ToLowerInvariant();
+}

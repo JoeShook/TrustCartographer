@@ -1,0 +1,24 @@
+### Variables
+@proxy = https://localhost:7257
+@holder = {{proxy}}/holder
+
+### 1. What DID does this wallet hold?
+GET {{holder}}/wallet/did
+
+### 2. List currently held credentials
+GET {{holder}}/wallet/credentials
+
+### 3. Redeem a credential offer end-to-end
+# Get an offerUri by POSTing to {{proxy}}/issuer/credential-offer first.
+@offerUri = openid-credential-offer://?credential_offer=REPLACE-ME
+
+POST {{holder}}/wallet/redeem-offer
+Content-Type: application/json
+
+{
+  "offerUri": "{{offerUri}}"
+}
+
+### Diagnostics
+GET {{holder}}/info
+GET {{holder}}/health

@@ -1,0 +1,27 @@
+### Variables
+@proxy = https://localhost:7257
+
+### Full issuance flow in two calls (proxy captures every internal hop)
+### 1. Mint an offer on the Issuer
+POST {{proxy}}/issuer/credential-offer
+Content-Type: application/json
+
+{}
+
+### 2. Hand the offerUri from the response above to the Holder wallet
+@offerUri = REPLACE-ME
+
+POST {{proxy}}/holder/wallet/redeem-offer
+Content-Type: application/json
+
+{
+  "offerUri": "{{offerUri}}"
+}
+
+### Captured proxy traffic (JSON)
+GET {{proxy}}/traffic
+
+### Service home pages
+GET {{proxy}}/issuer/
+GET {{proxy}}/holder/
+GET {{proxy}}/verifier/

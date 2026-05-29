@@ -1,0 +1,11 @@
+@* Issuer-local router. Only the Issuer's own assembly is scanned for @page
+   routes — shared TC.UI components (AppShell, JwtViewer) resolve via the
+   project reference + @using, not the router. Scanning TC.UI here would pull
+   in its @page "/" Home and collide with the Issuer's own Home. *@
+
+<Router AppAssembly="typeof(App).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+</Router>

@@ -1,37 +1,28 @@
 @inherits LayoutComponentBase
 
-<FluentDesignTheme @bind-Mode="@Mode" StorageName="theme" />
-
-<FluentLayout>
-    <FluentHeader>
-        <span style="font-size: 1.2rem; font-weight: 600;">TrustCartographer</span>
-        <FluentSpacer />
-        <FluentButton Appearance="Appearance.Stealth"
-                      IconEnd="@(Mode == DesignThemeModes.Dark ? new RegularIcons.Size20.WeatherSunny() : new RegularIcons.Size20.WeatherMoon())"
-                      OnClick="@ToggleTheme"
-                      Title="Toggle dark mode" />
-    </FluentHeader>
-    <FluentStack Class="main" Orientation="Orientation.Horizontal" Width="100%">
-        <NavMenu />
-        <FluentBodyContent Class="body-content">
-            <div class="content" style="padding: 24px;">
-                @Body
-            </div>
-        </FluentBodyContent>
-    </FluentStack>
-</FluentLayout>
-
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">X</span>
-</div>
-
-@code {
-    private DesignThemeModes Mode { get; set; } = DesignThemeModes.System;
-
-    private void ToggleTheme()
-    {
-        Mode = Mode == DesignThemeModes.Dark ? DesignThemeModes.Light : DesignThemeModes.Dark;
-    }
-}
+<AppShell BrandText="TrustCartographer" BrandSublabel="Web">
+    <NavLinks>
+        <FluentNavLink Href="/" Match="NavLinkMatch.All"
+                       Icon="@(new RegularIcons.Size20.Home())">
+            Home
+        </FluentNavLink>
+        <FluentNavLink Href="/keys"
+                       Icon="@(new RegularIcons.Size20.Key())">
+            Key Pairs
+        </FluentNavLink>
+        <FluentNavGroup Title="Walkthroughs"
+                        Icon="@(new RegularIcons.Size20.PlayCircle())">
+            <FluentNavLink Href="/practitioner-license"
+                           Icon="@(new RegularIcons.Size20.Certificate())">
+                Practitioner License
+            </FluentNavLink>
+        </FluentNavGroup>
+        <FluentNavLink Href="/live-flow"
+                       Icon="@(new RegularIcons.Size20.Pulse())">
+            Live Flow
+        </FluentNavLink>
+    </NavLinks>
+    <Body>
+        @Body
+    </Body>
+</AppShell>

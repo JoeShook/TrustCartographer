@@ -12,9 +12,11 @@ namespace TrustCartographer.Issuer.Services;
 /// </summary>
 public sealed class IssuerStores
 {
+    private const int MaxIssuanceLogEntries = 50;
     private readonly ConcurrentDictionary<string, OfferRecord> _offersByPreAuthCode = new();
     private readonly ConcurrentDictionary<string, AccessTokenRecord> _accessTokens = new();
     private readonly ConcurrentDictionary<string, DateTimeOffset> _activeNonces = new();
+    private readonly ConcurrentQueue<IssuanceRecord> _issuanceLog = new();
 
     public OfferRecord CreateOffer(string credentialConfigurationId, IReadOnlyDictionary<string, object?> subjectClaims)
     {
@@ -61,6 +63,15 @@ public sealed class IssuerStores
         return expiresAt > DateTimeOffset.UtcNow;
     }
 
+    public void RecordIssuance(IssuanceRecord record)
+    {
+        _issuanceLog.Enqueue(record);
+        while (_issuanceLog.Count > MaxIssuanceLogEntries && _issuanceLog.TryDequeue(out _)) { }
+    }
+
+    /// <summary>Snapshot of recent issuances, newest first.</summary>
+    public IReadOnlyList<IssuanceRecord> IssuanceLog() => _issuanceLog.Reverse().ToArray();
+
     private static string NewToken(int byteLen)
     {
         Span<byte> buf = stackalloc byte[byteLen];
@@ -81,3 +92,9 @@ public record AccessTokenRecord(
     string CredentialConfigurationId,
     IReadOnlyDictionary<string, object?> SubjectClaims,
     DateTimeOffset ExpiresAt);
+
+public record IssuanceRecord(
+    DateTimeOffset At,
+    string SubjectDid,
+    string CredentialConfigurationId,
+    string CredentialId);

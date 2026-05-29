@@ -1,5 +1,7 @@
+using Microsoft.FluentUI.AspNetCore.Components;
 using TrustCartographer.Core.Oid4Vci;
 using TrustCartographer.Core.Services;
+using TrustCartographer.Holder.Components;
 using TrustCartographer.Holder.Endpoints;
 using TrustCartographer.Holder.Services;
 
@@ -13,36 +15,33 @@ builder.Services.AddSingleton<PopJwtService>();
 builder.Services.AddSingleton<HolderKeyMaterial>();
 builder.Services.AddSingleton<WalletStore>();
 
-// The wallet does its own outbound HTTPS calls; service-discovery defaults
-// from AddServiceDefaults apply so https://issuer etc. resolve to Aspire
-// dev endpoints.
+// Wallet client uses an outbound HttpClient for OID4VCI calls
 builder.Services.AddHttpClient<WalletClient>();
+
+// Blazor Server + FluentUI
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
+builder.Services.AddFluentUIComponents();
 
 var app = builder.Build();
 app.MapDefaultEndpoints();
 
+app.UseAntiforgery();
+app.MapStaticAssets();
+
+// Diagnostics + wallet endpoints (unchanged from Phase 2A)
 app.MapGet("/info", (HolderKeyMaterial keys) => Results.Ok(new
 {
     name = "holder",
     purpose = "Holds VCs; receives via OID4VCI, presents via OID4VP",
-    phase = "2A",
+    phase = "2A.2",
     did = keys.Did
 }));
-
 app.MapGet("/ping", () => "pong");
-
-app.MapGet("/", () => Results.Content(
-    "<html><body style='font-family:sans-serif'><h1>TrustCartographer Holder Wallet</h1>" +
-    "<h2>Wallet endpoints</h2><ul>" +
-    "<li>POST /wallet/redeem-offer { offer_uri }</li>" +
-    "<li><a href='/wallet/credentials'>/wallet/credentials</a></li>" +
-    "<li><a href='/wallet/did'>/wallet/did</a></li>" +
-    "</ul><h2>Diagnostics</h2><ul>" +
-    "<li><a href='/info'>/info</a></li><li><a href='/ping'>/ping</a></li>" +
-    "<li><a href='/health'>/health</a></li><li><a href='/alive'>/alive</a></li>" +
-    "</ul></body></html>",
-    "text/html"));
-
 app.MapWalletEndpoints();
+
+// Blazor Server takes over GET / via Home.razor
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
 
 app.Run();

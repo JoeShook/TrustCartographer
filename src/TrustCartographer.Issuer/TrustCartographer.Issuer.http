@@ -1,0 +1,65 @@
+### Variables
+@proxy = https://localhost:7257
+@issuer = {{proxy}}/issuer
+
+### 1. Issuer metadata (OID4VCI Section 11.2.1)
+GET {{issuer}}/.well-known/openid-credential-issuer
+Accept: application/json
+
+### 2. Authorization server metadata (RFC 8414 + OID4VCI Section 11.2.3)
+GET {{issuer}}/.well-known/oauth-authorization-server
+Accept: application/json
+
+### 3. Mint a credential offer (admin) — defaults to PractitionerLicenseCredential
+POST {{issuer}}/credential-offer
+Content-Type: application/json
+
+{}
+
+### 3b. Mint with custom subject claims
+POST {{issuer}}/credential-offer
+Content-Type: application/json
+
+{
+  "credentialConfigurationId": "PractitionerLicenseCredential",
+  "subjectClaims": {
+    "practitionerName": "Dr. Alex Park",
+    "licenseNumber": "MD-2026-99999",
+    "specialty": "Cardiology",
+    "jurisdiction": "OR"
+  }
+}
+
+### 4. Token endpoint — pre-authorized code grant (OID4VCI Section 6)
+# Replace @preAuthCode with the value from the offer response above.
+@preAuthCode = REPLACE-ME
+
+POST {{issuer}}/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code={{preAuthCode}}
+
+### 5. Nonce endpoint (OID4VCI Section 7)
+POST {{issuer}}/nonce
+
+### 6. Credential endpoint (OID4VCI Section 8)
+# Requires a Bearer access_token from /token AND a proof JWT bound to
+# the c_nonce from /nonce. Easiest path: drive the flow from the Holder
+# wallet — see TrustCartographer.Holder.http.
+@accessToken = REPLACE-ME
+@proofJwt = REPLACE-ME
+
+POST {{issuer}}/credential
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "credential_configuration_id": "PractitionerLicenseCredential",
+  "proofs": {
+    "jwt": ["{{proofJwt}}"]
+  }
+}
+
+### Diagnostics
+GET {{issuer}}/info
+GET {{issuer}}/health

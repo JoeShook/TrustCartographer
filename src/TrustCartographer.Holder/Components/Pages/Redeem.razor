@@ -1,0 +1,70 @@
+@page "/redeem"
+@inject WalletClient Wallet
+@inject NavigationManager Nav
+
+<PageTitle>Redeem Credential Offer</PageTitle>
+
+<h1>Redeem a Credential Offer</h1>
+<p class="muted">
+    Paste a credential offer URI (starts with <code>openid-credential-offer://</code>).
+    The wallet fetches issuer metadata, exchanges the pre-authorized code,
+    builds a proof-of-possession JWT, and stores the resulting credential.
+</p>
+
+<FluentCard>
+    <FluentTextArea @bind-Value="offerUri"
+                    Label="Credential offer URI"
+                    Rows="6"
+                    Style="width: 100%;" />
+
+    <FluentStack Orientation="Orientation.Horizontal" Style="margin-top: 1rem;">
+        <FluentButton Appearance="Appearance.Accent"
+                      Disabled="@(isRedeeming || string.IsNullOrWhiteSpace(offerUri))"
+                      OnClick="RedeemAsync">
+            @(isRedeeming ? "Redeeming…" : "Redeem")
+        </FluentButton>
+        @if (!string.IsNullOrEmpty(status))
+        {
+            <span class="muted">@status</span>
+        }
+    </FluentStack>
+
+    @if (!string.IsNullOrEmpty(errorDetail))
+    {
+        <FluentMessageBar Title="Redeem failed" Intent="@MessageIntent.Error" Style="margin-top: 1rem;">
+            <pre class="codeblock">@errorDetail</pre>
+        </FluentMessageBar>
+    }
+</FluentCard>
+
+@code {
+    private string offerUri = string.Empty;
+    private string? status;
+    private string? errorDetail;
+    private bool isRedeeming;
+
+    private async Task RedeemAsync()
+    {
+        if (isRedeeming) return;
+        isRedeeming = true;
+        status = null;
+        errorDetail = null;
+        try
+        {
+            var stored = await Wallet.RedeemOfferAsync(offerUri);
+            status = $"Stored credential {stored.Id} ({stored.CredentialConfigurationId}). Redirecting to wallet…";
+            await InvokeAsync(StateHasChanged);
+            await Task.Delay(800);
+            Nav.NavigateTo("/wallet");
+        }
+        catch (Exception ex)
+        {
+            errorDetail = ex.ToString();
+            status = "failed";
+        }
+        finally
+        {
+            isRedeeming = false;
+        }
+    }
+}

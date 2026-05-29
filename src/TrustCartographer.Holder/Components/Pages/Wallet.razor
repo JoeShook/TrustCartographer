@@ -1,0 +1,51 @@
+@page "/wallet"
+@using TrustCartographer.UI.Shared
+@inject WalletStore Store
+
+<PageTitle>Wallet — Credentials</PageTitle>
+
+<h1>Held Credentials</h1>
+<p class="muted">
+    Every credential the wallet has accepted from any Issuer. Click a row to
+    decode the JWT-VC header + payload.
+</p>
+
+@if (Store.All().Count == 0)
+{
+    <FluentCard>
+        <p class="muted"><em>No credentials yet. Go to <a href="/redeem">Redeem Offer</a> to add one.</em></p>
+    </FluentCard>
+}
+else
+{
+    @foreach (var cred in Store.All().OrderByDescending(c => c.ReceivedAt))
+    {
+        var open = openIds.Contains(cred.Id);
+        <FluentCard Style="margin-bottom: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;"
+                 @onclick="() => Toggle(cred.Id)">
+                <FluentIcon Value="@(open ? (Icon)new RegularIcons.Size20.ChevronDown() : new RegularIcons.Size20.ChevronRight())" />
+                <div style="flex: 1;">
+                    <strong>@cred.CredentialConfigurationId</strong>
+                    <div class="muted" style="font-size: 0.9em;">
+                        From @cred.CredentialIssuer · received @cred.ReceivedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
+                    </div>
+                </div>
+            </div>
+            @if (open)
+            {
+                <div style="margin-top: 0.75rem;">
+                    <JwtViewer Jwt="@cred.Jwt" />
+                </div>
+            }
+        </FluentCard>
+    }
+}
+
+@code {
+    private readonly HashSet<string> openIds = new();
+    private void Toggle(string id)
+    {
+        if (!openIds.Add(id)) openIds.Remove(id);
+    }
+}

@@ -1,0 +1,33 @@
+@page "/"
+@inject HolderKeyMaterial Keys
+@inject WalletStore Store
+
+<PageTitle>Dr. Smith's Wallet</PageTitle>
+
+<h1>Wallet</h1>
+<p class="muted">
+    Receives <code>jwt_vc_json</code> credentials via OID4VCI 1.0 and stores
+    them in memory. The wallet's <code>did:key</code> is the subject identifier
+    embedded in every credential it accepts.
+</p>
+
+<FluentCard Style="margin-bottom: 1rem;">
+    <h3>Wallet Identity</h3>
+    <FluentLabel Typo="Typography.Body">DID</FluentLabel>
+    <pre class="codeblock">@Keys.Did</pre>
+    <FluentLabel Typo="Typography.Body">Ed25519 public key (hex)</FluentLabel>
+    <pre class="codeblock">@PublicKeyHex</pre>
+</FluentCard>
+
+<FluentCard>
+    <h3>Status</h3>
+    <p>
+        <strong>@Store.All().Count</strong> credential(s) currently held.
+        <a href="/wallet">View wallet</a> or
+        <a href="/redeem">redeem a new credential</a>.
+    </p>
+</FluentCard>
+
+@code {
+    private string PublicKeyHex => Convert.ToHexString(Keys.KeyPair.PublicKey).ToLowerInvariant();
+}

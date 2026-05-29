@@ -1,0 +1,21 @@
+@inherits LayoutComponentBase
+
+<AppShell BrandText="Dr. Smith's Wallet" BrandSublabel="Holder">
+    <NavLinks>
+        <FluentNavLink Href="/" Match="NavLinkMatch.All"
+                       Icon="@(new RegularIcons.Size20.Home())">
+            Overview
+        </FluentNavLink>
+        <FluentNavLink Href="/wallet"
+                       Icon="@(new RegularIcons.Size20.Wallet())">
+            Wallet
+        </FluentNavLink>
+        <FluentNavLink Href="/redeem"
+                       Icon="@(new RegularIcons.Size20.QrCode())">
+            Redeem Offer
+        </FluentNavLink>
+    </NavLinks>
+    <Body>
+        @Body
+    </Body>
+</AppShell>

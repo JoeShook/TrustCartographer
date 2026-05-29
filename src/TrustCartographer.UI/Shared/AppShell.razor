@@ -1,0 +1,50 @@
+@* Shared chrome for every TrustCartographer host: theme, header, nav slot, body slot.
+   Each host plugs in its own NavLinks render fragment. Theme persists per-origin
+   via FluentDesignTheme's localStorage binding. *@
+
+<FluentDesignTheme @bind-Mode="@Mode" StorageName="theme" />
+
+<FluentLayout>
+    <FluentHeader>
+        <span style="font-size: 1.2rem; font-weight: 600;">@BrandText</span>
+        @if (!string.IsNullOrEmpty(BrandSublabel))
+        {
+            <span style="margin-left: 8px; opacity: 0.7; font-size: 0.95rem;">@BrandSublabel</span>
+        }
+        <FluentSpacer />
+        <FluentButton Appearance="Appearance.Stealth"
+                      IconEnd="@(Mode == DesignThemeModes.Dark
+                                 ? (Icon)new RegularIcons.Size20.WeatherSunny()
+                                 : new RegularIcons.Size20.WeatherMoon())"
+                      OnClick="ToggleTheme"
+                      Title="Toggle theme" />
+    </FluentHeader>
+    <FluentStack Class="main" Orientation="Orientation.Horizontal" Width="100%">
+        <FluentNavMenu Width="220" Title="Navigation">
+            @NavLinks
+        </FluentNavMenu>
+        <FluentBodyContent Class="body-content">
+            <div class="content" style="padding: 24px;">
+                @Body
+            </div>
+        </FluentBodyContent>
+    </FluentStack>
+</FluentLayout>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">X</span>
+</div>
+
+@code {
+    [Parameter] public string BrandText { get; set; } = "TrustCartographer";
+    [Parameter] public string? BrandSublabel { get; set; }
+    [Parameter] public RenderFragment? NavLinks { get; set; }
+    [Parameter] public RenderFragment? Body { get; set; }
+
+    private DesignThemeModes Mode { get; set; } = DesignThemeModes.System;
+
+    private void ToggleTheme() =>
+        Mode = Mode == DesignThemeModes.Dark ? DesignThemeModes.Light : DesignThemeModes.Dark;
+}

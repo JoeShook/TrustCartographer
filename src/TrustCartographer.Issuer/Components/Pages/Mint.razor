@@ -1,0 +1,124 @@
+@page "/mint"
+@using System.Net.Http.Json
+@using System.Text.Json
+@using TrustCartographer.Core.Oid4Vci
+@inject CredentialCatalog Catalog
+@inject IssuerStores Stores
+@inject IHttpClientFactory HttpFactory
+@inject NavigationManager Nav
+
+<PageTitle>Mint Credential Offer</PageTitle>
+
+<h1>Mint a Credential Offer</h1>
+<p class="muted">
+    Generates a one-time pre-authorized code, builds the OID4VCI credential
+    offer URI (by-value), and shows the JSON. Hand the URI to any wallet
+    (including the Holder service at <code>/holder/redeem</code>) to complete
+    the dance.
+</p>
+
+<FluentCard Style="margin-bottom: 1rem;">
+    <h3>Configuration</h3>
+    <FluentSelect TOption="string"
+                  Label="Credential type"
+                  Items="@Catalog.SupportedConfigurations.Keys"
+                  OptionValue="@(s => s)"
+                  OptionText="@(s => s)"
+                  @bind-Value="selectedConfigId" />
+
+    <FluentStack Orientation="Orientation.Horizontal" Style="margin-top: 1rem;">
+        <FluentButton Appearance="Appearance.Accent" OnClick="MintAsync">Mint offer</FluentButton>
+        <FluentButton Appearance="Appearance.Neutral"
+                      Disabled="@string.IsNullOrEmpty(offerUri)"
+                      OnClick="SendToWalletAsync">
+            @(isSending ? "Sending…" : "Send to local Holder wallet")
+        </FluentButton>
+        @if (!string.IsNullOrEmpty(statusMessage))
+        {
+            <span class="muted">@statusMessage</span>
+        }
+    </FluentStack>
+</FluentCard>
+
+@if (!string.IsNullOrEmpty(offerUri))
+{
+    <FluentCard Style="margin-bottom: 1rem;">
+        <h3>Credential Offer URI</h3>
+        <pre class="codeblock">@offerUri</pre>
+    </FluentCard>
+
+    <FluentCard>
+        <h3>Credential Offer JSON</h3>
+        <pre class="codeblock">@offerJson</pre>
+    </FluentCard>
+}
+
+@code {
+    private string selectedConfigId = CredentialCatalog.PractitionerLicenseId;
+    private string? offerUri;
+    private string? offerJson;
+    private string? statusMessage;
+    private bool isSending;
+
+    private void MintAsync()
+    {
+        statusMessage = null;
+        var claims = Catalog.DefaultSubjectClaimsFor(selectedConfigId);
+        var record = Stores.CreateOffer(selectedConfigId, claims);
+
+        var offer = new CredentialOffer
+        {
+            CredentialIssuer = TrimTrailingSlash(Nav.BaseUri),
+            CredentialConfigurationIds = [selectedConfigId],
+            Grants = new CredentialOfferGrants
+            {
+                PreAuthorizedCode = new PreAuthorizedCodeGrant
+                {
+                    PreAuthorizedCode = record.PreAuthorizedCode
+                }
+            }
+        };
+
+        offerUri = CredentialOfferUri.BuildByValue(offer);
+        offerJson = JsonSerializer.Serialize(offer, new JsonSerializerOptions { WriteIndented = true });
+    }
+
+    private async Task SendToWalletAsync()
+    {
+        if (string.IsNullOrEmpty(offerUri)) return;
+        isSending = true;
+        statusMessage = null;
+        try
+        {
+            var http = HttpFactory.CreateClient("loopback");
+            // Issuer runs behind /issuer; the Holder is at /holder relative to
+            // the proxy root, which is the parent of Nav.BaseUri.
+            http.BaseAddress = new Uri(ProxyRootFromBase(Nav.BaseUri));
+            var resp = await http.PostAsJsonAsync("holder/wallet/redeem-offer", new { offerUri });
+            resp.EnsureSuccessStatusCode();
+            statusMessage = "Sent. See /live-flow on TC.Web for the captured trace.";
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Send failed: {ex.Message}";
+        }
+        finally
+        {
+            isSending = false;
+        }
+    }
+
+    private static string TrimTrailingSlash(string s) => s.EndsWith('/') ? s[..^1] : s;
+
+    private static string ProxyRootFromBase(string baseUri)
+    {
+        // Nav.BaseUri here is the public path the Issuer is mounted at, e.g.
+        // "https://localhost:7257/issuer/". Strip the last segment to point at
+        // the proxy root so we can address /holder/* alongside.
+        var uri = new Uri(baseUri);
+        var trimmed = uri.AbsolutePath.TrimEnd('/');
+        var slash = trimmed.LastIndexOf('/');
+        var parent = slash > 0 ? trimmed[..slash] : "";
+        return $"{uri.Scheme}://{uri.Authority}{parent}/";
+    }
+}

@@ -221,6 +221,12 @@ public static class Oid4VciEndpoints
                 claims: session.SubjectClaims,
                 validity: TimeSpan.FromDays(730));
 
+            stores.RecordIssuance(new IssuanceRecord(
+                At: DateTimeOffset.UtcNow,
+                SubjectDid: verification.HolderDidKey,
+                CredentialConfigurationId: configId,
+                CredentialId: issued.CredentialId));
+
             return Results.Ok(new CredentialResponse
             {
                 Credentials = [new IssuedCredential { Credential = issued.Jwt }]

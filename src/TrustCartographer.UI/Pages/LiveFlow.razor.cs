@@ -21,8 +21,8 @@ public partial class LiveFlow : ComponentBase, IDisposable
         new SsiActor
         {
             Key = "browser", Label = "Browser", Sublabel = "demo trigger",
-            Tooltip = "This Live Flow page, acting as the operator that kicks off issuance. " +
-                      "In a real deployment the offer would be shown as a QR code and scanned by the wallet."
+            Tooltip = "This Live Flow page, acting as the operator that kicks off the flow. " +
+                      "In a real deployment offers/requests would be QR codes scanned by the wallet."
         },
         new SsiActor
         {
@@ -32,7 +32,12 @@ public partial class LiveFlow : ComponentBase, IDisposable
         new SsiActor
         {
             Key = "holder", Label = "Dr. Smith's Wallet", Sublabel = "Holder",
-            Tooltip = "Wallet that redeems the offer and runs the OID4VCI dance to obtain and store the credential."
+            Tooltip = "Wallet that redeems offers (OID4VCI) and presents credentials (OID4VP)."
+        },
+        new SsiActor
+        {
+            Key = "verifier", Label = "Hospital EHR", Sublabel = "Verifier",
+            Tooltip = "OID4VP verifier. Requests a presentation and verifies it: holder proof + issuer signature (resolved from the issuer's did:key)."
         },
     };
 
@@ -45,6 +50,10 @@ public partial class LiveFlow : ComponentBase, IDisposable
     private string? failureReason;
     private bool isPlaying;
     private const int PlayStepDelayMs = 1100;
+
+    // Result-bar labels for the most recent run.
+    private string successLabel = "CREDENTIAL ISSUED";
+    private string failLabel = "ISSUANCE FAILED";
 
     protected override void OnInitialized()
     {
@@ -59,13 +68,41 @@ public partial class LiveFlow : ComponentBase, IDisposable
         _ = InvokeAsync(StateHasChanged);
     }
 
-    // ───────────────────────── Trigger + capture ─────────────────────────
+    // ───────────────────────── Triggers ─────────────────────────
 
-    private async Task TriggerIssuanceAsync()
+    private Task TriggerIssuanceAsync() =>
+        RunAsync("CREDENTIAL ISSUED", "ISSUANCE FAILED", async http =>
+        {
+            await MintAndRedeemAsync(http);
+            return null; // HTTP-2xx success is sufficient for issuance.
+        });
+
+    private Task TriggerVerificationAsync() =>
+        RunAsync("VERIFIED", "REJECTED", async http => await RequestAndPresentAsync(http));
+
+    private Task RunFullDemoAsync() =>
+        RunAsync("VERIFIED", "REJECTED", async http =>
+        {
+            await MintAndRedeemAsync(http);
+            return await RequestAndPresentAsync(http);
+        });
+
+    /// <summary>
+    /// Shared run harness: clear capture + diagram, run <paramref name="flow"/> against
+    /// a loopback client (so every hop is proxied + captured), then snapshot the captured
+    /// traffic into animated steps and play. The flow may return an explicit verdict
+    /// (used by verification, whose verdict lives in the response body, not the HTTP code);
+    /// null means "judge success purely by HTTP status".
+    /// </summary>
+    private async Task RunAsync(
+        string okLabel, string badLabel,
+        Func<HttpClient, Task<(bool ok, string? reason)?>> flow)
     {
         if (isRunning || isPlaying) return;
         isRunning = true;
         errorMessage = null;
+        successLabel = okLabel;
+        failLabel = badLabel;
 
         // Fresh capture + clean diagram so the animation reflects exactly this run.
         TrafficLog.Clear();
@@ -76,37 +113,59 @@ public partial class LiveFlow : ComponentBase, IDisposable
         ResetAnimation();
         await InvokeAsync(StateHasChanged);
 
+        (bool ok, string? reason)? verdict = null;
         try
         {
             var http = HttpClientFactory.CreateClient("loopback");
             http.BaseAddress = new Uri(Nav.BaseUri);
-
-            // 1. Mint a credential offer on the Issuer (through the proxy).
-            var offerResp = await http.PostAsync("issuer/credential-offer", JsonContent.Create(new { }));
-            offerResp.EnsureSuccessStatusCode();
-            using var offerDoc = JsonDocument.Parse(await offerResp.Content.ReadAsStringAsync());
-            var offerUri = offerDoc.RootElement.GetProperty("offerUri").GetString()
-                ?? throw new InvalidOperationException("Issuer did not return offerUri.");
-
-            // 2. Hand the offer to the Holder wallet (through the proxy). This single
-            //    call drives the whole OID4VCI dance, so every hop is captured.
-            var redeemResp = await http.PostAsJsonAsync("holder/wallet/redeem-offer", new { offerUri });
-            redeemResp.EnsureSuccessStatusCode();
+            verdict = await flow(http);
         }
         catch (Exception ex)
         {
-            errorMessage = $"Issuance failed: {ex.Message}";
+            errorMessage = $"Flow failed: {ex.Message}";
         }
         finally
         {
-            // The outer redeem-offer entry logs on completion; give late entries a
-            // moment to land before snapshotting them into steps.
+            // Outer calls log on completion; give late entries a moment to land.
             await Task.Delay(150);
             BuildSteps();
+            if (verdict is { } v)
+            {
+                success = v.ok;
+                failureReason = v.ok ? null : v.reason;
+            }
             isRunning = false;
         }
 
         await PlayAll();
+    }
+
+    private static async Task MintAndRedeemAsync(HttpClient http)
+    {
+        var offerResp = await http.PostAsync("issuer/credential-offer", JsonContent.Create(new { }));
+        offerResp.EnsureSuccessStatusCode();
+        using var offerDoc = JsonDocument.Parse(await offerResp.Content.ReadAsStringAsync());
+        var offerUri = offerDoc.RootElement.GetProperty("offerUri").GetString()
+            ?? throw new InvalidOperationException("Issuer did not return offerUri.");
+
+        var redeemResp = await http.PostAsJsonAsync("holder/wallet/redeem-offer", new { offerUri });
+        redeemResp.EnsureSuccessStatusCode();
+    }
+
+    private static async Task<(bool ok, string? reason)?> RequestAndPresentAsync(HttpClient http)
+    {
+        var reqResp = await http.PostAsync("verifier/presentation-request", JsonContent.Create(new { }));
+        reqResp.EnsureSuccessStatusCode();
+        using var reqDoc = JsonDocument.Parse(await reqResp.Content.ReadAsStringAsync());
+        var requestUri = reqDoc.RootElement.GetProperty("requestUri").GetString()
+            ?? throw new InvalidOperationException("Verifier did not return requestUri.");
+
+        var presentResp = await http.PostAsJsonAsync("holder/wallet/present", new { requestUri });
+        presentResp.EnsureSuccessStatusCode(); // infra errors throw; a rejected verdict is still 200
+        using var pDoc = JsonDocument.Parse(await presentResp.Content.ReadAsStringAsync());
+        var status = pDoc.RootElement.TryGetProperty("status", out var s) ? s.GetString() : null;
+        var reason = pDoc.RootElement.TryGetProperty("reason", out var r) ? r.GetString() : null;
+        return (status == "accepted", reason);
     }
 
     private void ClearLog()
@@ -162,6 +221,7 @@ public partial class LiveFlow : ComponentBase, IDisposable
     {
         bool Has(string s) => e.Path.Contains(s, StringComparison.OrdinalIgnoreCase);
 
+        // ── Issuance (OID4VCI) ──
         if (Has("/credential-offer"))
             return new("browser", "issuer", "Mint credential offer",
                 "The Live Flow page (acting as operator) asks the <strong>Issuer</strong> to create a " +
@@ -181,18 +241,32 @@ public partial class LiveFlow : ComponentBase, IDisposable
                 "<code>token_endpoint</code> for redeeming the pre-authorized code.", 3);
         if (Has("/token"))
             return new("holder", "issuer", "Redeem pre-auth code → access token",
-                "The wallet POSTs the <code>pre-authorized_code</code> (grant type " +
-                "<code>urn:ietf:params:oauth:grant-type:pre-authorized_code</code>) and receives a short-lived " +
-                "<code>access_token</code>.", 4);
+                "The wallet POSTs the <code>pre-authorized_code</code> and receives a short-lived <code>access_token</code>.", 4);
         if (Has("/nonce"))
             return new("holder", "issuer", "Request c_nonce for proof",
-                "The wallet requests a fresh <code>c_nonce</code>. It will sign this nonce to prove it controls the " +
-                "holder's private key (proof of possession).", 5);
+                "The wallet requests a fresh <code>c_nonce</code> to sign — proving it controls the holder's private key.", 5);
         if (Has("/credential"))
             return new("holder", "issuer", "Send PoP proof → receive JWT-VC",
                 "The wallet sends a proof JWT (signed over the nonce + audience) with its <code>access_token</code>. " +
-                "The Issuer verifies the proof and returns the signed <strong>JWT-VC</strong> bound to the holder's " +
-                "<code>did:key</code>.", 6);
+                "The Issuer verifies the proof and returns the signed <strong>JWT-VC</strong> bound to the holder's <code>did:key</code>.", 6);
+
+        // ── Verification (OID4VP) ── (check the {id} GET + response before the bare request)
+        if (Has("/presentation-response"))
+            return new("holder", "verifier", "Post Verifiable Presentation (direct_post)",
+                "The <strong>wallet</strong> builds a holder-signed VP (the JWT-VC wrapped + bound to the verifier's " +
+                "<code>nonce</code> and <code>client_id</code>) and POSTs the <code>vp_token</code>. The <strong>Verifier</strong> " +
+                "checks the holder proof, then resolves the issuer's <code>did:key</code> to verify the credential signature.", 13);
+        if (Has("/presentation-request/"))
+            return new("holder", "verifier", "Fetch presentation request",
+                "The wallet dereferences <code>request_uri</code> to read what the Verifier wants: " +
+                "<code>nonce</code>, <code>client_id</code>, <code>response_uri</code>, and the required credential type.", 12);
+        if (Has("/wallet/present"))
+            return new("browser", "holder", "Hand request to wallet",
+                "The operator passes the presentation <code>requestUri</code> to the wallet, which runs the OID4VP flow.", 11);
+        if (Has("/presentation-request"))
+            return new("browser", "verifier", "Build presentation request",
+                "The <strong>Verifier</strong> mints a one-time <code>nonce</code> + <code>state</code> and a request URI " +
+                "describing the credential it needs (a <code>presentation_definition</code>).", 10);
 
         var to = e.To is "issuer" or "holder" or "verifier" ? e.To : "issuer";
         return new("browser", to, $"{e.Method} {e.Path}", "Captured exchange.", 99);

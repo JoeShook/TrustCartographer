@@ -1,5 +1,6 @@
 using Microsoft.FluentUI.AspNetCore.Components;
 using TrustCartographer.Core.Oid4Vci;
+using TrustCartographer.Core.Oid4Vp;
 using TrustCartographer.Core.Services;
 using TrustCartographer.Holder.Components;
 using TrustCartographer.Holder.Endpoints;
@@ -14,9 +15,11 @@ builder.Services.AddSingleton<VcService>();
 builder.Services.AddSingleton<PopJwtService>();
 builder.Services.AddSingleton<HolderKeyMaterial>();
 builder.Services.AddSingleton<WalletStore>();
+builder.Services.AddSingleton<VpService>();
 
-// Wallet client uses an outbound HttpClient for OID4VCI calls
+// Wallet clients use outbound HttpClients for OID4VCI (issuance) and OID4VP (presentation)
 builder.Services.AddHttpClient<WalletClient>();
+builder.Services.AddHttpClient<PresentationClient>();
 
 // Blazor Server + FluentUI
 builder.Services.AddRazorComponents()

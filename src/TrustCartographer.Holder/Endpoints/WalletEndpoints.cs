@@ -33,6 +33,29 @@ public static class WalletEndpoints
             }
         });
 
+        // OID4VP: present a held credential to a Verifier and relay the verdict.
+        app.MapPost("/wallet/present", async (
+            PresentRequest body,
+            PresentationClient presentation,
+            CancellationToken ct) =>
+        {
+            if (string.IsNullOrWhiteSpace(body.RequestUri))
+                return Results.BadRequest(new { error = "request_uri is required." });
+            try
+            {
+                var outcome = await presentation.PresentAsync(body.RequestUri, ct);
+                return Results.Ok(outcome);
+            }
+            catch (HttpRequestException ex)
+            {
+                return Results.Json(new { error = "presentation_failed", detail = ex.Message }, statusCode: 502);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.BadRequest(new { error = "invalid_presentation", detail = ex.Message });
+            }
+        });
+
         app.MapGet("/wallet/credentials", (WalletStore store) => Results.Ok(store.All()));
 
         app.MapGet("/wallet/did", (HolderKeyMaterial keys) => Results.Ok(new { did = keys.Did }));
@@ -40,3 +63,5 @@ public static class WalletEndpoints
 }
 
 public record RedeemOfferRequest(string OfferUri);
+
+public record PresentRequest(string RequestUri);

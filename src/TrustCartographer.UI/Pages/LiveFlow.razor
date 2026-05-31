@@ -11,9 +11,10 @@
 <div class="page-header">
     <FluentLabel Typo="Typography.PageTitle">Live Flow</FluentLabel>
     <div class="page-subtitle">
-        The <strong>real</strong> OID4VCI issuance handshake, captured off the wire by the YARP proxy and
-        replayed as a sequence diagram. This is the <em>issuance</em> half of the trust triangle
-        (Issuer → Holder); the Verifier joins once OID4VP lands.
+        The <strong>real</strong> trust-triangle handshakes, captured off the wire by the YARP proxy and
+        replayed as a sequence diagram. <em>Issuance</em> (OID4VCI, Issuer → Holder) and
+        <em>verification</em> (OID4VP, Holder → Verifier) each animate from actual HTTP — open the 📨 on any
+        step to inspect the real bytes. "Run full demo" plays the whole triangle end to end.
     </div>
 </div>
 
@@ -22,7 +23,19 @@
                   Disabled="@(isRunning || isPlaying)"
                   Size="ButtonSize.Small"
                   IconStart="@(new RegularIcons.Size16.Play())">
-        @(isRunning ? "Running…" : "Trigger credential issuance")
+        Trigger issuance
+    </FluentButton>
+    <FluentButton Appearance="Appearance.Accent" OnClick="TriggerVerificationAsync"
+                  Disabled="@(isRunning || isPlaying)"
+                  Size="ButtonSize.Small"
+                  IconStart="@(new RegularIcons.Size16.Play())">
+        Trigger verification
+    </FluentButton>
+    <FluentButton Appearance="Appearance.Accent" OnClick="RunFullDemoAsync"
+                  Disabled="@(isRunning || isPlaying)"
+                  Size="ButtonSize.Small"
+                  IconStart="@(new RegularIcons.Size16.Play())">
+        @(isRunning ? "Running…" : "Run full demo (issue → verify)")
     </FluentButton>
     <FluentButton Appearance="Appearance.Outline" OnClick="StepForward"
                   Disabled="@(steps.Count == 0 || currentIndex >= steps.Count - 1 || isPlaying || isRunning)"
@@ -50,8 +63,10 @@
     @if (steps.Count == 0)
     {
         <div class="step-list-empty">
-            Click <strong>Trigger credential issuance</strong> to run the real OID4VCI flow through the proxy.
-            Each captured HTTP hop becomes an animated step — open the 📨 to inspect the actual request/response bytes.
+            Click <strong>Trigger issuance</strong> (OID4VCI), <strong>Trigger verification</strong> (OID4VP), or
+            <strong>Run full demo</strong> to drive the real flow through the proxy. Each captured HTTP hop becomes
+            an animated step — open the 📨 to inspect the actual request/response bytes.
+            <em>Verification needs a credential in the wallet first, so start with issuance or use Run full demo.</em>
         </div>
     }
     else
@@ -59,7 +74,7 @@
         <SsiSequenceDiagram Actors="@actors" Steps="@steps" CurrentIndex="@currentIndex"
                             SelectedStepIndex="@selectedStepIndex"
                             Complete="@isComplete" Success="@success" FailureReason="@failureReason"
-                            SuccessLabel="CREDENTIAL ISSUED" FailLabel="ISSUANCE FAILED" />
+                            SuccessLabel="@successLabel" FailLabel="@failLabel" />
     }
 </div>
 

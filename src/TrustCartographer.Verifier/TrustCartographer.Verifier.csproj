@@ -7,7 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" Version="4.14.0" />
+    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.Icons" Version="4.14.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\TrustCartographer.ServiceDefaults\TrustCartographer.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\TrustCartographer.Core\TrustCartographer.Core.csproj" />
+    <ProjectReference Include="..\TrustCartographer.UI\TrustCartographer.UI.csproj" />
   </ItemGroup>
 
 </Project>

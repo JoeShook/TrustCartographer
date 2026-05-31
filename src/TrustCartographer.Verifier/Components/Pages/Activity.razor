@@ -1,0 +1,55 @@
+@page "/activity"
+@implements IDisposable
+@inject VerifierStores Stores
+
+<PageTitle>Verification Activity</PageTitle>
+
+<h1>Verification Activity</h1>
+<p class="muted">
+    Most recent presentation verifications. Auto-refreshes every 2 seconds.
+</p>
+
+@if (records.Count == 0)
+{
+    <FluentCard>
+        <p class="muted"><em>No presentations verified yet. Create a request and send it to a wallet to populate this list.</em></p>
+    </FluentCard>
+}
+else
+{
+    <FluentDataGrid Items="@records.AsQueryable()" GridTemplateColumns="1.1fr 1fr 1.6fr 2.2fr 2.2fr 2.4fr">
+        <PropertyColumn Title="When (local)" Property="@(r => r.At.ToLocalTime().ToString("HH:mm:ss"))" />
+        <TemplateColumn Title="Status">
+            <span style="font-weight: 600; color: @(context.Status == "accepted" ? "var(--success, #2e7d32)" : "var(--error, #c62828)");">
+                @(context.Status == "accepted" ? "✅ accepted" : "❌ rejected")
+            </span>
+        </TemplateColumn>
+        <PropertyColumn Title="Credential type" Property="@(r => r.CredentialType ?? "—")" />
+        <PropertyColumn Title="Holder DID" Property="@(r => Shorten(r.HolderDid))" />
+        <PropertyColumn Title="Issuer DID" Property="@(r => Shorten(r.IssuerDid))" />
+        <PropertyColumn Title="Reason" Property="@(r => r.Reason)" />
+    </FluentDataGrid>
+}
+
+@code {
+    private IReadOnlyList<VerificationRecord> records = Array.Empty<VerificationRecord>();
+    private Timer? timer;
+
+    protected override void OnInitialized()
+    {
+        records = Stores.VerificationLog();
+        timer = new Timer(_ =>
+        {
+            records = Stores.VerificationLog();
+            _ = InvokeAsync(StateHasChanged);
+        }, null, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(2));
+    }
+
+    private static string Shorten(string? did)
+    {
+        if (string.IsNullOrEmpty(did)) return "—";
+        return did.Length <= 28 ? did : $"{did[..20]}…{did[^6..]}";
+    }
+
+    public void Dispose() => timer?.Dispose();
+}

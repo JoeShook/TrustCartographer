@@ -1,0 +1,43 @@
+@page "/"
+@inject PresentationCatalog Catalog
+@inject NavigationManager Nav
+
+<PageTitle>Hospital EHR (Verifier)</PageTitle>
+
+<h1>Hospital EHR</h1>
+<p class="muted">
+    OID4VP 1.0 verifier. Requests a Verifiable Presentation from a wallet and
+    checks it: holder proof-of-possession, then the embedded credential's issuer
+    signature — resolved purely from the issuer's <code>did:key</code>.
+</p>
+
+<FluentCard Style="margin-bottom: 1rem;">
+    <h3>Verifier Identity</h3>
+    <FluentLabel Typo="Typography.Body">client_id</FluentLabel>
+    <pre class="codeblock">@ClientId</pre>
+    <FluentLabel Typo="Typography.Body">Requires credential type</FluentLabel>
+    <pre class="codeblock">@PresentationCatalog.RequiredCredentialType</pre>
+    <FluentLabel Typo="Typography.Body">Purpose</FluentLabel>
+    <p>@Catalog.Purpose</p>
+</FluentCard>
+
+<FluentCard>
+    <h3>What this verifier trusts</h3>
+    <p>
+        Verification here proves two things cryptographically:
+    </p>
+    <ul>
+        <li><strong>Holder binding</strong> — the presenter controls the key the credential was issued to.</li>
+        <li><strong>Issuer signature</strong> — the credential really was signed by the DID named as its issuer.</li>
+    </ul>
+    <FluentMessageBar Title="No trust list yet" Intent="@MessageIntent.Warning">
+        This verifier accepts <em>any</em> <code>did:key</code> issuer — resolving the issuer's
+        DID only proves <em>who</em> signed, not that they are an <em>authoritative</em> source of
+        licensure. Deciding which issuers to trust is exactly the gap that trust frameworks
+        (trust lists, certifications, UDAP trust communities) exist to close.
+    </FluentMessageBar>
+</FluentCard>
+
+@code {
+    private string ClientId => Nav.BaseUri.TrimEnd('/');
+}

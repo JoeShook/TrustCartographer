@@ -55,7 +55,7 @@
             status = $"Stored credential {stored.Id} ({stored.CredentialConfigurationId}). Redirecting to wallet…";
             await InvokeAsync(StateHasChanged);
             await Task.Delay(800);
-            Nav.NavigateTo("/wallet");
+            Nav.NavigateTo("wallet");
         }
         catch (Exception ex)
         {

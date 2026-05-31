@@ -1,10 +1,16 @@
+@{
+    // base href reflects the proxy mount point so relative assets, the Blazor
+    // circuit, and nav links resolve under /issuer/ (proxied) or / (direct).
+    var prefix = HttpContext?.Request.PathBase.Value;
+    var baseHref = string.IsNullOrEmpty(prefix) ? "/" : $"{prefix}/";
+}
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <base href="/" />
+    <base href="@baseHref" />
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="stylesheet" href="@Assets["TrustCartographer.Issuer.styles.css"]" />
     <link rel="stylesheet" href="@Assets["_content/TrustCartographer.UI/TrustCartographer.UI.bundle.scp.css"]" />
@@ -18,3 +24,8 @@
 </body>
 
 </html>
+
+@code {
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+}

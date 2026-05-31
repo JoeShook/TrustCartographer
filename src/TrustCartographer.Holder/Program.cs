@@ -26,6 +26,21 @@ builder.Services.AddFluentUIComponents();
 var app = builder.Build();
 app.MapDefaultEndpoints();
 
+// Behind the TC.Web YARP proxy this service is mounted at /holder. YARP strips
+// that prefix and forwards it as X-Forwarded-Prefix; reinstate it as the request
+// PathBase so the Blazor base href, static assets, the SignalR circuit, and all
+// generated links resolve under /holder/. Direct access (no header) leaves
+// PathBase empty and everything resolves at the root.
+app.Use(async (context, next) =>
+{
+    var prefix = context.Request.Headers["X-Forwarded-Prefix"].FirstOrDefault();
+    if (!string.IsNullOrEmpty(prefix))
+    {
+        context.Request.PathBase = prefix;
+    }
+    await next();
+});
+
 app.UseAntiforgery();
 app.MapStaticAssets();
 

@@ -1,5 +1,6 @@
 @page "/live-flow"
 @using TrustCartographer.UI.Live
+@using TrustCartographer.UI.Shared
 @implements IDisposable
 @inject ITrafficLog TrafficLog
 @inject IHttpClientFactory HttpClientFactory
@@ -7,22 +8,37 @@
 
 <PageTitle>Live Flow — TrustCartographer</PageTitle>
 
-<h1>Live Flow</h1>
-<p class="muted">
-    Real HTTP traffic captured by the YARP reverse proxy as the Holder wallet
-    redeems a credential offer from the Issuer. Each row is one wire exchange
-    — click to inspect the request / response bodies.
-</p>
+<div class="page-header">
+    <FluentLabel Typo="Typography.PageTitle">Live Flow</FluentLabel>
+    <div class="page-subtitle">
+        The <strong>real</strong> OID4VCI issuance handshake, captured off the wire by the YARP proxy and
+        replayed as a sequence diagram. This is the <em>issuance</em> half of the trust triangle
+        (Issuer → Holder); the Verifier joins once OID4VP lands.
+    </div>
+</div>
 
-<div class="live-flow__toolbar">
-    <FluentButton Appearance="Appearance.Accent"
-                  Disabled="@isRunning"
-                  OnClick="TriggerIssuanceAsync">
+<div class="control-bar">
+    <FluentButton Appearance="Appearance.Accent" OnClick="TriggerIssuanceAsync"
+                  Disabled="@(isRunning || isPlaying)"
+                  Size="ButtonSize.Small"
+                  IconStart="@(new RegularIcons.Size16.Play())">
         @(isRunning ? "Running…" : "Trigger credential issuance")
     </FluentButton>
-    <FluentButton Appearance="Appearance.Neutral"
-                  OnClick="ClearLog">
-        Clear log
+    <FluentButton Appearance="Appearance.Outline" OnClick="StepForward"
+                  Disabled="@(steps.Count == 0 || currentIndex >= steps.Count - 1 || isPlaying || isRunning)"
+                  Size="ButtonSize.Small">
+        Step
+    </FluentButton>
+    <FluentButton Appearance="Appearance.Outline" OnClick="Replay"
+                  Disabled="@(steps.Count == 0 || isPlaying || isRunning)"
+                  Size="ButtonSize.Small"
+                  IconStart="@(new RegularIcons.Size16.ArrowCounterclockwise())">
+        @(isPlaying ? "Playing…" : "Replay")
+    </FluentButton>
+    <FluentButton Appearance="Appearance.Outline" OnClick="ClearLog"
+                  Disabled="@(isRunning || isPlaying)"
+                  Size="ButtonSize.Small">
+        Clear
     </FluentButton>
     @if (!string.IsNullOrEmpty(errorMessage))
     {
@@ -30,41 +46,86 @@
     }
 </div>
 
-<div class="live-flow__entries">
-    @if (entries.Count == 0)
+<div class="diagram-wrap">
+    @if (steps.Count == 0)
     {
-        <p class="muted"><em>No traffic captured yet. Click <strong>Trigger credential issuance</strong> to start.</em></p>
+        <div class="step-list-empty">
+            Click <strong>Trigger credential issuance</strong> to run the real OID4VCI flow through the proxy.
+            Each captured HTTP hop becomes an animated step — open the 📨 to inspect the actual request/response bytes.
+        </div>
     }
     else
     {
-        @foreach (var (entry, idx) in entries.Select((e, i) => (e, i)))
-        {
-            var capturedIdx = idx;
-            var isOpen = openIndexes.Contains(capturedIdx);
-            <div class="live-flow__row @(isOpen ? "is-open" : "")"
-                 @onclick="() => Toggle(capturedIdx)">
-                <span class="live-flow__time">@entry.Timestamp.ToLocalTime().ToString("HH:mm:ss.fff")</span>
-                <span class="live-flow__method live-flow__method--@entry.Method.ToLower()">@entry.Method</span>
-                <span class="live-flow__to">→ @entry.To</span>
-                <span class="live-flow__path">@entry.Path</span>
-                <span class="live-flow__status @(StatusClass(entry.StatusCode))">@entry.StatusCode</span>
-                <span class="live-flow__duration">@entry.DurationMs ms</span>
-            </div>
-            @if (isOpen)
-            {
-                <div class="live-flow__detail">
-                    <div class="live-flow__pane">
-                        <h4>Request</h4>
-                        <div class="muted">@entry.RequestContentType · @entry.RequestBodyBytes bytes @(entry.RequestBodyTruncated ? "(truncated)" : "")</div>
-                        <pre>@RenderBody(entry.RequestBody, entry.RequestContentType)</pre>
-                    </div>
-                    <div class="live-flow__pane">
-                        <h4>Response</h4>
-                        <div class="muted">@entry.ResponseContentType · @entry.ResponseBodyBytes bytes @(entry.ResponseBodyTruncated ? "(truncated)" : "")</div>
-                        <pre>@RenderBody(entry.ResponseBody, entry.ResponseContentType)</pre>
-                    </div>
-                </div>
-            }
-        }
+        <SsiSequenceDiagram Actors="@actors" Steps="@steps" CurrentIndex="@currentIndex"
+                            SelectedStepIndex="@selectedStepIndex"
+                            Complete="@isComplete" Success="@success" FailureReason="@failureReason"
+                            SuccessLabel="CREDENTIAL ISSUED" FailLabel="ISSUANCE FAILED" />
     }
 </div>
+
+@if (currentIndex >= 0)
+{
+    <div class="step-list">
+        @for (var i = 0; i <= currentIndex && i < steps.Count; i++)
+        {
+            var capturedIdx = i;
+            var step = steps[capturedIdx];
+            var isSelected = selectedStepIndex == capturedIdx;
+            <div class="step-item @(isSelected ? "step-item-selected" : "")"
+                 @onclick="@(() => SelectStep(capturedIdx))">
+                <div class="step-item-header">
+                    <span class="step-number">@(capturedIdx + 1)</span>
+                    <span class="step-label">@step.Label</span>
+                    @if (!string.IsNullOrEmpty(step.HttpMethod))
+                    {
+                        <span class="step-http">@step.HttpMethod @step.HttpPath</span>
+                    }
+                </div>
+                @if (isSelected)
+                {
+                    <div class="step-item-body">
+                        @((MarkupString)stepExplanations[capturedIdx])
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+
+@if (entries.Count > 0)
+{
+    <details class="raw-log">
+        <summary>Raw wire log (@entries.Count exchange@(entries.Count == 1 ? "" : "s"))</summary>
+        <div class="live-flow__entries">
+            @foreach (var (entry, idx) in entries.Select((e, i) => (e, i)))
+            {
+                var capturedIdx = idx;
+                var isOpen = openIndexes.Contains(capturedIdx);
+                <div class="live-flow__row @(isOpen ? "is-open" : "")"
+                     @onclick="() => Toggle(capturedIdx)">
+                    <span class="live-flow__time">@entry.Timestamp.ToLocalTime().ToString("HH:mm:ss.fff")</span>
+                    <span class="live-flow__method live-flow__method--@entry.Method.ToLower()">@entry.Method</span>
+                    <span class="live-flow__to">→ @entry.To</span>
+                    <span class="live-flow__path">@entry.Path</span>
+                    <span class="live-flow__status @(StatusClass(entry.StatusCode))">@entry.StatusCode</span>
+                    <span class="live-flow__duration">@entry.DurationMs ms</span>
+                </div>
+                @if (isOpen)
+                {
+                    <div class="live-flow__detail">
+                        <div class="live-flow__pane">
+                            <h4>Request</h4>
+                            <div class="muted">@entry.RequestContentType · @entry.RequestBodyBytes bytes @(entry.RequestBodyTruncated ? "(truncated)" : "")</div>
+                            <pre>@RenderBody(entry.RequestBody, entry.RequestContentType)</pre>
+                        </div>
+                        <div class="live-flow__pane">
+                            <h4>Response</h4>
+                            <div class="muted">@entry.ResponseContentType · @entry.ResponseBodyBytes bytes @(entry.ResponseBodyTruncated ? "(truncated)" : "")</div>
+                            <pre>@RenderBody(entry.ResponseBody, entry.ResponseContentType)</pre>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </details>
+}

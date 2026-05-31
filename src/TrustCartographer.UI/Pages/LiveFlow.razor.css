@@ -105,3 +105,140 @@
     line-height: 1.4;
     margin: 0.25rem 0 0;
 }
+
+/* ── Header ── */
+.page-header {
+    margin-bottom: 0.6rem;
+}
+
+.page-subtitle {
+    font-size: 0.85rem;
+    opacity: 0.75;
+    margin-top: 0.1rem;
+    line-height: 1.5;
+}
+
+/* ── Control bar ── */
+.control-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding: 0.5rem 0.75rem;
+    background: rgba(127, 127, 127, 0.06);
+    border: 1px solid rgba(127, 127, 127, 0.18);
+    border-radius: 6px;
+    margin-bottom: 0.6rem;
+}
+
+/* ── Diagram ── */
+.diagram-wrap {
+    overflow-x: auto;
+    margin-bottom: 0.6rem;
+}
+
+/* ── Stepped explanation list ── */
+.step-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 0.75rem;
+}
+
+.step-list-empty {
+    padding: 1rem;
+    background: rgba(127, 127, 127, 0.06);
+    border: 1px solid rgba(127, 127, 127, 0.18);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    opacity: 0.85;
+    line-height: 1.5;
+}
+
+.step-item {
+    padding: 0.45rem 0.75rem;
+    background: rgba(127, 127, 127, 0.06);
+    border: 1px solid rgba(127, 127, 127, 0.18);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.step-item:hover {
+    background: rgba(100, 181, 246, 0.10);
+    border-color: rgba(100, 181, 246, 0.35);
+}
+
+.step-item-selected {
+    background: rgba(100, 181, 246, 0.12);
+    border-color: rgba(100, 181, 246, 0.55);
+    box-shadow: inset 4px 0 0 #64b5f6;
+    cursor: default;
+}
+
+.step-item-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    padding: 0 0.4rem;
+    border-radius: 50%;
+    background: rgba(100, 181, 246, 0.18);
+    color: #90caf9;
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.step-item-selected .step-number {
+    background: #64b5f6;
+    color: #0f1419;
+}
+
+.step-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    flex: 1;
+}
+
+.step-http {
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.72rem;
+    opacity: 0.65;
+    white-space: nowrap;
+}
+
+.step-item-body {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(127, 127, 127, 0.2);
+    font-size: 0.85rem;
+    line-height: 1.55;
+}
+
+/* ── Collapsible raw wire log ── */
+.raw-log {
+    border: 1px solid rgba(127, 127, 127, 0.18);
+    border-radius: 6px;
+    margin-top: 0.5rem;
+}
+
+.raw-log > summary {
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    opacity: 0.85;
+    user-select: none;
+}
+
+.raw-log[open] > summary {
+    border-bottom: 1px solid rgba(127, 127, 127, 0.18);
+}

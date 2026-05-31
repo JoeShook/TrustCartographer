@@ -15,6 +15,11 @@ public partial class SsiSequenceDiagram : ComponentBase
     [Parameter] public bool Success { get; set; } = true;
     [Parameter] public string? FailureReason { get; set; }
 
+    /// <summary>Result-bar text on success / failure. Defaults suit a verification flow;
+    /// an issuance flow can pass e.g. "CREDENTIAL ISSUED" / "ISSUANCE FAILED".</summary>
+    [Parameter] public string SuccessLabel { get; set; } = "VERIFIED";
+    [Parameter] public string FailLabel { get; set; } = "REJECTED";
+
     /// <summary>If set, the corresponding step's row gets a visual highlight to mark it as selected.</summary>
     [Parameter] public int? SelectedStepIndex { get; set; }
 

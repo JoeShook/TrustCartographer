@@ -133,7 +133,7 @@
         <div class="tc-seq-result @(Success ? "tc-seq-pass" : "tc-seq-fail") tc-seq-anim-fade">
             <span style="font-size: 1.3rem;">@(Success ? "✅" : "❌")</span>
             <span>
-                @(Success ? "VERIFIED" : "REJECTED")
+                @(Success ? SuccessLabel : FailLabel)
                 @if (!string.IsNullOrEmpty(FailureReason))
                 {
                     <span> &mdash; @FailureReason</span>

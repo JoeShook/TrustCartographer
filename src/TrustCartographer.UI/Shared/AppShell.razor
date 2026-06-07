@@ -37,6 +37,32 @@
     <span class="dismiss">X</span>
 </div>
 
+@* Global override: let nav labels word-wrap instead of truncating with an ellipsis,
+   and let the row grow to fit. Not CSS-isolated on purpose — it must reach FluentUI's
+   own .fluent-nav-* light-DOM classes. Applies to every host via the shared AppShell. *@
+<style>
+    .fluent-nav-text {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        line-height: 1.2;
+        min-width: 0;
+        padding: 2px 0;
+    }
+
+    .fluent-nav-item,
+    .fluent-nav-link,
+    .fluent-nav-link .positioning-region,
+    .fluent-nav-link .content-region {
+        height: auto !important;
+        min-height: 2rem;
+    }
+
+    .fluent-nav-link .content-region {
+        align-items: center;
+    }
+</style>
+
 @code {
     [Parameter] public string BrandText { get; set; } = "TrustCartographer";
     [Parameter] public string? BrandSublabel { get; set; }

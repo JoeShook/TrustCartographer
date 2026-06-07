@@ -1,0 +1,54 @@
+@if (Credential is null)
+{
+    <div class="tc-jwt-error">No SD-JWT to display.</div>
+}
+else
+{
+    <div class="tc-sdjwt-viewer">
+        <div class="tc-jwt-section-label">ISSUER-SIGNED JWT · HEADER</div>
+        <pre class="tc-jwt-json">@Credential.HeaderJson</pre>
+
+        <div class="tc-jwt-section-label">ISSUER-SIGNED JWT · PAYLOAD</div>
+        <pre class="tc-jwt-json">@((MarkupString)IssuerPayloadAnnotated)</pre>
+
+        <div class="tc-jwt-section-label">
+            DISCLOSURES @(hasPresentation ? "— revealed vs withheld in this presentation" : "— all held by the wallet")
+        </div>
+        <table class="tc-sdjwt-disc">
+            <thead>
+                <tr>
+                    <th>Claim</th>
+                    <th>Value</th>
+                    <th>Status</th>
+                    <th>Digest (committed in <code>_sd</code>)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in rows)
+                {
+                    <tr class="@(r.Revealed ? "revealed" : "withheld")">
+                        <td>@r.D.ClaimName</td>
+                        <td>@(r.Revealed ? r.D.ValueJson : "—")</td>
+                        <td>@(hasPresentation ? (r.Revealed ? "🔓 revealed" : "🔒 withheld") : "held")</td>
+                        <td class="digest">@Trunc(r.D.Digest)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @if (hasPresentation)
+        {
+            @if (kbHeader is not null)
+            {
+                <div class="tc-jwt-section-label">KEY BINDING JWT · HEADER</div>
+                <pre class="tc-jwt-json">@kbHeader</pre>
+                <div class="tc-jwt-section-label">KEY BINDING JWT · PAYLOAD (binds to verifier aud + nonce)</div>
+                <pre class="tc-jwt-json">@((MarkupString)kbPayload!)</pre>
+            }
+            else
+            {
+                <div class="tc-jwt-section-label tc-sdjwt-nokb">No Key Binding JWT in this presentation</div>
+            }
+        }
+    </div>
+}

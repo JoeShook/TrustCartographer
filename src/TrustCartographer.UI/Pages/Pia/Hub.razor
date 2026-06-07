@@ -1,0 +1,71 @@
+@page "/pia"
+
+<PageTitle>Portable Identity Assurance</PageTitle>
+
+<div class="page-header">
+    <FluentLabel Typo="Typography.PageTitle">Portable Identity Assurance in Healthcare</FluentLabel>
+    <div class="page-subtitle">
+        A worked, runnable build of the architecture in
+        <strong>"Portable Identity Assurance in Healthcare: A Framework for Minor Identity and a Foundation for
+        Federated Trust"</strong> — issue, hold, present, and verify durable health-identity credentials across
+        organizational boundaries using SD-JWT VC + OID4VC.
+        <br />
+        <span class="muted">
+            Source: Max Templeton, Cambia Health Solutions (DRAFT v0.9) —
+            <a href="https://docs.google.com/document/d/11P-XSaal9cgpXTzp8W5Jc50ppZoeN7PF/edit" target="_blank" rel="noopener">document</a>.
+            Summaries here are our own analysis; we do not reproduce the paper's text.
+        </span>
+    </div>
+</div>
+
+<FluentCard Style="margin-bottom: 1rem;">
+    <h3>The four-tier model</h3>
+    <ol>
+        <li><strong>Tier 1 — Delegate identity verification.</strong> A responsible adult is identity-proofed and mapped to an assurance level (FAST IDIAL).</li>
+        <li><strong>Tier 2 — Delegated proofing &amp; issuance.</strong> The adult vouches for the minor; an SD-JWT VC is issued via OID4VCI carrying the (discounted) assurance level.</li>
+        <li><strong>Tier 3 — Presentation &amp; relying-party decision.</strong> The wallet presents only the needed claims via OID4VP; the verifier weighs assurance against transaction risk.</li>
+        <li><strong>Tier 4 — Governance / trust framework.</strong> Who is authoritative for what — the trust list the verifier consults.</li>
+    </ol>
+    <p class="muted">
+        Two foundations cut across every tier: <strong>SD-JWT selective disclosure</strong> (the credential format) and
+        <strong>delegated proofing + assurance levels</strong> (the trust basis). We build those first, then layer the
+        issuance pathways, custody lifecycle, verification, and governance on top.
+    </p>
+</FluentCard>
+
+<FluentCard>
+    <h3>Workflows</h3>
+    <table class="pia-workflows">
+        <thead>
+            <tr><th>Workflow</th><th>Paper tier</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><a href="/pia/minor-age-check">Minor Age Check — SD-JWT selective disclosure</a></td>
+                <td>Foundation (Tier 3 format)</td>
+                <td><span class="badge live">live</span></td>
+            </tr>
+            <tr><td>Delegated proofing + assurance levels</td><td>Tier 1–2</td><td><span class="badge planned">planned</span></td></tr>
+            <tr><td>Issuance Pathway A — payer enrollment</td><td>Tier 1–2</td><td><span class="badge planned">planned</span></td></tr>
+            <tr><td>Issuance Pathway B — provider in-person</td><td>Tier 1–2</td><td><span class="badge planned">planned</span></td></tr>
+            <tr><td>Issuance Pathway C — IAL2 CSP (Login.gov)</td><td>Tier 1–2</td><td><span class="badge planned">planned</span></td></tr>
+            <tr><td>Guardian → minor custody transfer</td><td>Custody</td><td><span class="badge planned">planned</span></td></tr>
+            <tr><td>Verification &amp; trust decision → OIDC token</td><td>Tier 3</td><td><span class="badge planned">planned</span></td></tr>
+            <tr><td>Governance / issuer trust list</td><td>Tier 4</td><td><span class="badge planned">planned</span></td></tr>
+        </tbody>
+    </table>
+</FluentCard>
+
+<style>
+    .page-header { margin-bottom: 0.6rem; }
+    .page-subtitle { font-size: 0.85rem; opacity: 0.8; margin-top: 0.1rem; line-height: 1.55; }
+    .muted { opacity: 0.7; }
+    .pia-workflows { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .pia-workflows th, .pia-workflows td {
+        text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid rgba(127,127,127,0.2);
+    }
+    .pia-workflows th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.75; }
+    .badge { font-size: 0.7rem; font-weight: 700; padding: 0.1rem 0.45rem; border-radius: 10px; }
+    .badge.live { background: rgba(76,175,80,0.18); color: #66bb6a; }
+    .badge.planned { background: rgba(127,127,127,0.15); opacity: 0.8; }
+</style>

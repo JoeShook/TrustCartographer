@@ -1,0 +1,178 @@
+@page "/pia/minor-age-check"
+@using TrustCartographer.UI.Shared
+
+<PageTitle>Minor Age Check — SD-JWT Selective Disclosure</PageTitle>
+
+<div class="page-header">
+    <FluentLabel Typo="Typography.PageTitle">Minor Age Check — SD-JWT Selective Disclosure</FluentLabel>
+    <div class="page-subtitle">
+        A guardian's wallet proves a minor is (or isn't) over 18 to an urgent-care clinic while revealing
+        <strong>nothing else</strong> — no name, no date of birth. Live SD-JWT crypto, no mock data.
+        Part of <a href="/pia">Portable Identity Assurance</a>.
+    </div>
+</div>
+
+<div class="control-bar">
+    <FluentButton Appearance="Appearance.Accent" OnClick="StepForward"
+                  Disabled="@(currentIndex >= steps.Count - 1 || isPlaying)"
+                  Size="ButtonSize.Small"
+                  IconStart="@(new RegularIcons.Size16.Play())">
+        @(currentIndex < 0 ? "Start" : "Next")
+    </FluentButton>
+    <FluentButton Appearance="Appearance.Outline" OnClick="PlayAll"
+                  Disabled="@(currentIndex >= steps.Count - 1 || isPlaying)"
+                  Size="ButtonSize.Small">
+        @(isPlaying ? "Playing…" : "Play to end")
+    </FluentButton>
+    <FluentButton Appearance="Appearance.Outline" OnClick="Reset"
+                  Size="ButtonSize.Small"
+                  IconStart="@(new RegularIcons.Size16.ArrowCounterclockwise())">
+        Reset
+    </FluentButton>
+    <span class="control-divider"></span>
+    <span class="control-label">Scenario:</span>
+    <FluentRadioGroup TValue="TamperMode" Value="@tamperMode" ValueChanged="OnTamperChanged" Orientation="Orientation.Horizontal">
+        <FluentRadio Value="@TamperMode.None">Happy path</FluentRadio>
+        <FluentRadio Value="@TamperMode.RevealEverything">Reveal everything</FluentRadio>
+        <FluentRadio Value="@TamperMode.TamperedDisclosure">Tampered disclosure</FluentRadio>
+        <FluentRadio Value="@TamperMode.ReplayedNonce">Replayed nonce</FluentRadio>
+        <FluentRadio Value="@TamperMode.NoKeyBinding">No key binding</FluentRadio>
+    </FluentRadioGroup>
+</div>
+
+@if (privacyLeak && currentIndex >= StepPresent)
+{
+    <FluentMessageBar Title="Over-disclosure" Intent="@MessageIntent.Warning" Style="margin-bottom: 0.5rem;">
+        The wallet revealed every claim though only <code>age_over_18</code> was requested. This still verifies
+        cryptographically — but the verifier now knows the minor's name and date of birth. Selective disclosure
+        is a policy the holder must actually use.
+    </FluentMessageBar>
+}
+
+<div class="diagram-wrap">
+    <SsiSequenceDiagram Actors="@actors" Steps="@steps" CurrentIndex="@currentIndex"
+                        SelectedStepIndex="@selectedStepIndex"
+                        Complete="@isComplete" Success="@verifySuccess" FailureReason="@failureReason"
+                        SuccessLabel="PRESENTATION VERIFIED" FailLabel="REJECTED" />
+</div>
+
+<div class="step-list">
+    @if (currentIndex < 0)
+    {
+        <div class="step-list-empty">
+            Click <strong>Start</strong> to step through issuance → selective presentation → verification.
+            The two key artifacts to inspect are the held credential (step 2) and the presented form (step 5).
+        </div>
+    }
+    else
+    {
+        @for (var i = 0; i <= currentIndex; i++)
+        {
+            var idx = i;
+            var step = steps[idx];
+            var isSelected = selectedStepIndex == idx;
+            <div class="step-item @(isSelected ? "step-item-selected" : "")" @onclick="@(() => SelectStep(idx))">
+                <div class="step-item-header">
+                    <span class="step-number">@(idx + 1)</span>
+                    <span class="step-label">@step.Label</span>
+                </div>
+                @if (isSelected)
+                {
+                    <div class="step-item-body">
+                        @((MarkupString)stepExplanations[idx])
+
+                        @if (ShowCredentialViewer(idx))
+                        {
+                            <div class="artifact"><SdJwtViewer Credential="@issued" /></div>
+                        }
+                        else if (ShowPresentationViewer(idx))
+                        {
+                            <div class="artifact"><SdJwtViewer Credential="@issued" Presentation="@presentation" /></div>
+                        }
+                        else if (ShowVerifyTable(idx))
+                        {
+                            <div class="artifact">
+                                <table class="verify-table">
+                                    <tbody>
+                                        <tr><td>Issuer signature</td><td>@Mark(verifyResult.IssuerSignatureValid)</td></tr>
+                                        <tr><td>Disclosure digests in <code>_sd</code></td><td>@Mark(verifyResult.DisclosuresValid)</td></tr>
+                                        <tr><td>Key binding (holder proof)</td><td>@Mark(verifyResult.KeyBindingValid)</td></tr>
+                                        <tr><td>Audience</td><td>@Mark(verifyResult.AudienceValid)</td></tr>
+                                        <tr><td>Nonce</td><td>@Mark(verifyResult.NonceValid)</td></tr>
+                                        <tr><td><code>sd_hash</code></td><td>@Mark(verifyResult.SdHashValid)</td></tr>
+                                    </tbody>
+                                </table>
+                                <div class="verify-summary">
+                                    <strong>Disclosed:</strong>
+                                    @if (verifyResult.DisclosedClaims.Count == 0)
+                                    {
+                                        <em>nothing</em>
+                                    }
+                                    else
+                                    {
+                                        @string.Join(", ", verifyResult.DisclosedClaims.Select(kv => $"{kv.Key} = {kv.Value?.ToString() ?? "null"}"))
+                                    }
+                                    · <strong>Withheld:</strong> @verifyResult.WithheldCount claim(s)
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private static MarkupString Mark(bool ok) =>
+        new(ok ? "<span style=\"color:#66bb6a;font-weight:700;\">✓</span>"
+               : "<span style=\"color:#e94560;font-weight:700;\">✗</span>");
+}
+
+<style>
+    .page-header { margin-bottom: 0.6rem; }
+    .page-subtitle { font-size: 0.85rem; opacity: 0.75; margin-top: 0.1rem; line-height: 1.5; }
+
+    .control-bar {
+        display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+        padding: 0.5rem 0.75rem; background: rgba(127,127,127,0.06);
+        border: 1px solid rgba(127,127,127,0.18); border-radius: 6px; margin-bottom: 0.5rem;
+    }
+    .control-divider { width: 1px; height: 1.3rem; background: rgba(127,127,127,0.25); margin: 0 0.25rem; }
+    .control-label { font-size: 0.78rem; opacity: 0.7; font-weight: 600; }
+
+    .diagram-wrap { overflow-x: auto; margin-bottom: 0.5rem; }
+
+    .step-list { display: flex; flex-direction: column; gap: 0.35rem; }
+    .step-list-empty {
+        padding: 1rem; background: rgba(127,127,127,0.06); border: 1px solid rgba(127,127,127,0.18);
+        border-radius: 6px; font-size: 0.9rem; opacity: 0.85; line-height: 1.5;
+    }
+    .step-item {
+        padding: 0.45rem 0.75rem; background: rgba(127,127,127,0.06);
+        border: 1px solid rgba(127,127,127,0.18); border-radius: 6px; cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+    }
+    .step-item:hover { background: rgba(100,181,246,0.08); border-color: rgba(100,181,246,0.3); }
+    .step-item-selected {
+        background: rgba(100,181,246,0.10); border-color: rgba(100,181,246,0.5);
+        box-shadow: inset 4px 0 0 #64b5f6; cursor: default;
+    }
+    .step-item-header { display: flex; align-items: center; gap: 0.6rem; }
+    .step-number {
+        display: inline-flex; align-items: center; justify-content: center;
+        min-width: 1.5rem; height: 1.5rem; padding: 0 0.4rem; border-radius: 50%;
+        background: rgba(100,181,246,0.15); color: #90caf9; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;
+    }
+    .step-item-selected .step-number { background: #64b5f6; color: #0f1419; }
+    .step-label { font-size: 0.85rem; font-weight: 600; flex: 1; }
+    .step-item-body {
+        margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(127,127,127,0.2);
+        font-size: 0.85rem; line-height: 1.55;
+    }
+    .artifact { margin-top: 0.6rem; }
+
+    .verify-table { border-collapse: collapse; font-size: 0.82rem; margin-bottom: 0.4rem; }
+    .verify-table td { padding: 0.2rem 0.8rem 0.2rem 0; }
+    .verify-summary { font-size: 0.82rem; opacity: 0.9; }
+</style>

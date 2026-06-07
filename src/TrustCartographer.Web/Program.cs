@@ -13,6 +13,7 @@ builder.AddServiceDefaults();
 builder.Services.AddSingleton<CryptoService>();
 builder.Services.AddSingleton<DidKeyService>();
 builder.Services.AddSingleton<VcService>();
+builder.Services.AddSingleton<TrustCartographer.Core.SdJwt.SdJwtService>();
 
 // Visualization-only traffic capture. Same singleton serves both as the
 // concrete TrafficLog (middleware writes to it) and as ITrafficLog (LiveFlow

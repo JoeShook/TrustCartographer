@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\TrustCartographer.IdentityCsp\TrustCartographer.IdentityCsp.csproj" />
     <ProjectReference Include="..\TrustCartographer.Issuer\TrustCartographer.Issuer.csproj" />
     <ProjectReference Include="..\TrustCartographer.Holder\TrustCartographer.Holder.csproj" />
     <ProjectReference Include="..\TrustCartographer.Verifier\TrustCartographer.Verifier.csproj" />

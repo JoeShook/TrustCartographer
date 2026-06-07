@@ -1,0 +1,21 @@
+@inherits LayoutComponentBase
+
+<AppShell BrandText="Identity CSP" BrandSublabel="Delegated proofing (Login.gov-style)">
+    <NavLinks>
+        <FluentNavLink Href="" Match="NavLinkMatch.All"
+                       Icon="@(new RegularIcons.Size20.Home())">
+            Overview
+        </FluentNavLink>
+        <FluentNavLink Href="proof"
+                       Icon="@(new RegularIcons.Size20.Certificate())">
+            Proof
+        </FluentNavLink>
+        <FluentNavLink Href="activity"
+                       Icon="@(new RegularIcons.Size20.History())">
+            Activity
+        </FluentNavLink>
+    </NavLinks>
+    <Body>
+        @Body
+    </Body>
+</AppShell>

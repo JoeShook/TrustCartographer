@@ -6,6 +6,7 @@
     <Project Path="src/TrustCartographer.UI/TrustCartographer.UI.csproj" />
     <Project Path="src/TrustCartographer.Web/TrustCartographer.Web.csproj" />
     <Project Path="src/TrustCartographer.ServiceDefaults/TrustCartographer.ServiceDefaults.csproj" />
+    <Project Path="src/TrustCartographer.IdentityCsp/TrustCartographer.IdentityCsp.csproj" />
     <Project Path="src/TrustCartographer.Issuer/TrustCartographer.Issuer.csproj" />
     <Project Path="src/TrustCartographer.Holder/TrustCartographer.Holder.csproj" />
     <Project Path="src/TrustCartographer.Verifier/TrustCartographer.Verifier.csproj" />

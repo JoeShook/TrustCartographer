@@ -1,0 +1,50 @@
+@page "/"
+@inject ProofingCatalog Catalog
+
+<PageTitle>Identity CSP</PageTitle>
+
+<h1>Identity CSP</h1>
+<p class="muted">
+    A Credential Service Provider that performs <strong>delegated identity proofing</strong>
+    (NIST 800-63A rev4): a verified responsible adult vouches for a minor. The CSP is
+    CSP-of-record and expresses assurance on the <strong>FAST IDIAL</strong> scale.
+</p>
+
+<FluentCard Style="margin-bottom: 1rem;">
+    <h3>FAST IDIAL ladder</h3>
+    <ul>
+        <li><strong>IDIAL 4</strong> — ≈ NIST IAL2 (e.g. Login.gov / commercial IAL2 CSP)</li>
+        <li><strong>IDIAL 3</strong> — the practical middle ground most payers/providers operate at</li>
+        <li><strong>IDIAL 2</strong> — ≈ NIST IAL1; the <em>minimum delegate floor</em> for issuing a minor credential</li>
+        <li><strong>IDIAL 1 / below</strong> — too weak; not issuable</li>
+    </ul>
+</FluentCard>
+
+<FluentCard Style="margin-bottom: 1rem;">
+    <h3>Proofing methods offered</h3>
+    <table class="csp-methods">
+        <thead><tr><th>Method</th><th>Yields</th></tr></thead>
+        <tbody>
+            @foreach (var m in Catalog.Methods.Values)
+            {
+                <tr><td>@m.Label</td><td>@m.Idial</td></tr>
+            }
+        </tbody>
+    </table>
+</FluentCard>
+
+<FluentCard>
+    <h3>Delegation rules</h3>
+    <ul>
+        <li><strong>Ceiling</strong> — the minor's effective assurance can never exceed the delegate's.</li>
+        <li><strong>Discount</strong> — delegated proofing is a recognised-but-distinct pathway, marked "via delegation".</li>
+        <li><strong>Floor</strong> — below IDIAL 2, no minor credential may be issued.</li>
+    </ul>
+    <p class="muted">Run one on the <a href="proof">Proof</a> page; an issuer consults the resulting proofing event so the assurance basis travels in the credential.</p>
+</FluentCard>
+
+<style>
+    .csp-methods { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .csp-methods th, .csp-methods td { text-align: left; padding: 0.35rem 0.6rem; border-bottom: 1px solid rgba(127,127,127,0.2); }
+    .csp-methods th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.75; }
+</style>

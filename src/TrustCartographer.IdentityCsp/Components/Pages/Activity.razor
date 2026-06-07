@@ -1,0 +1,43 @@
+@page "/activity"
+@implements IDisposable
+@inject CspStores Stores
+
+<PageTitle>Proofing Activity</PageTitle>
+
+<h1>Proofing Activity</h1>
+<p class="muted">Recent delegated proofing events. Auto-refreshes every 2 seconds.</p>
+
+@if (records.Count == 0)
+{
+    <FluentCard>
+        <p class="muted"><em>No proofing events yet. Run one on the Proof page.</em></p>
+    </FluentCard>
+}
+else
+{
+    <FluentDataGrid Items="@records.AsQueryable()" GridTemplateColumns="1.1fr 1.8fr 1fr 1.2fr 0.8fr 2.4fr">
+        <PropertyColumn Title="When (local)" Property="@(r => r.At.ToLocalTime().ToString("HH:mm:ss"))" />
+        <PropertyColumn Title="Method" Property="@(r => r.Method)" />
+        <PropertyColumn Title="Delegate" Property="@(r => r.DelegateIdial)" />
+        <PropertyColumn Title="Minor effective" Property="@(r => r.MinorEffectiveIdial)" />
+        <PropertyColumn Title="Issuable" Property="@(r => r.Issuable ? "yes" : "no")" />
+        <PropertyColumn Title="Reason" Property="@(r => r.Reason)" />
+    </FluentDataGrid>
+}
+
+@code {
+    private IReadOnlyList<ProofingEvent> records = Array.Empty<ProofingEvent>();
+    private Timer? timer;
+
+    protected override void OnInitialized()
+    {
+        records = Stores.Log();
+        timer = new Timer(_ =>
+        {
+            records = Stores.Log();
+            _ = InvokeAsync(StateHasChanged);
+        }, null, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(2));
+    }
+
+    public void Dispose() => timer?.Dispose();
+}

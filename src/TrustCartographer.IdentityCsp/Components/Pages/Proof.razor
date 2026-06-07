@@ -1,0 +1,60 @@
+@page "/proof"
+@inject ProofingCatalog Catalog
+@inject DelegationPolicy Policy
+@inject CspStores Stores
+
+<PageTitle>Run a delegated proofing</PageTitle>
+
+<h1>Run a delegated proofing event</h1>
+<p class="muted">
+    Pick how the responsible adult (the <strong>delegate</strong>) is proofed. The CSP maps it to a
+    FAST IDIAL, then the delegation policy derives the minor's effective assurance —
+    floor IDIAL 2, ceiling = delegate level, discount noted.
+</p>
+
+<FluentCard Style="margin-bottom: 1rem;">
+    <h3>Proofing method</h3>
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="6">
+        @foreach (var m in Catalog.Methods.Values)
+        {
+            <FluentButton Appearance="Appearance.Outline" OnClick="@(() => Run(m.Id))">
+                @m.Label — @m.Idial
+            </FluentButton>
+        }
+    </FluentStack>
+</FluentCard>
+
+@if (result is not null)
+{
+    <FluentCard>
+        <h3>Proofing result</h3>
+        <table class="result">
+            <tbody>
+                <tr><td>Method</td><td>@result.Method</td></tr>
+                <tr><td>Delegate IDIAL</td><td><strong>@result.DelegateIdial</strong></td></tr>
+                <tr><td>Minor effective IDIAL</td><td><strong>@result.MinorEffectiveIdial</strong></td></tr>
+                <tr><td>Issuable?</td><td>@(result.Issuable ? "✅ yes" : "❌ no")</td></tr>
+                <tr><td>Reason</td><td>@result.Reason</td></tr>
+                <tr><td>Proofing event id</td><td><code>@result.Id</code></td></tr>
+            </tbody>
+        </table>
+        <p class="muted">An issuer will reference this proofing event id so the assurance travels in the minor's credential.</p>
+    </FluentCard>
+}
+
+@code {
+    private ProofingEvent? result;
+
+    private void Run(string method)
+    {
+        var idial = Catalog.IdialFor(method);
+        var delegation = Policy.Evaluate(idial);
+        result = Stores.Record("delegate", method, idial, delegation);
+    }
+}
+
+<style>
+    .result { font-size: 0.85rem; border-collapse: collapse; }
+    .result td { padding: 0.25rem 0.8rem 0.25rem 0; vertical-align: top; }
+    .result td:first-child { opacity: 0.7; white-space: nowrap; }
+</style>

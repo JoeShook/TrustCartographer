@@ -1,0 +1,9 @@
+@* Identity-CSP-local router. Only this app's own assembly is scanned for @page routes;
+   shared TC.UI components resolve via the project reference + @using, not the router. *@
+
+<Router AppAssembly="typeof(App).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+</Router>

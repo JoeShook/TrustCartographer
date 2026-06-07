@@ -56,10 +56,18 @@ Surfaced on the Verifier Overview page on purpose. This is the on-ramp to:
 **Phase 5 (NEXT, the end goal):** trust frameworks + comparative views — issuer trust lists /
 UDAP trust communities, and side-by-side **SSI vs Google A2A vs UDAP**.
 
+**In progress — "Portable Identity Assurance in Healthcare" program** (implements the Templeton/Cambia
+proposal; cited+linked, not copied). A grouped suite of workflows under `/pia`, built in phases.
+*Phase A1 done:* `Core/SdJwt/SdJwtService` (SD-JWT VC selective disclosure — SDK-grade), `SdJwtViewer`,
+and the live **Minor Age Check** walkthrough (`/pia/minor-age-check`, reveal `age_over_18` only + tamper
+toggles). Backlog: delegated proofing + FAST IDIAL assurance, the 3 issuance pathways, custody
+transfer, verification→OIDC token, and the Tier-4 trust list (the UDAP-comparison pivot). Deep-dives in
+`docs/use-cases/portable-identity-assurance/`.
+
 ## Running it
 `dotnet run --project src/TrustCartographer.AppHost`
 - Entry/proxy: `https://localhost:7257` → `/`, `/issuer/`, `/holder/`, `/verifier/`,
-  `/live-flow`, `/practitioner-license`.
+  `/live-flow`, `/practitioner-license`, `/pia` (Portable Identity Assurance hub).
 - Aspire dashboard: `https://localhost:17051` — login URL with `?t=<token>` printed each launch.
 
 **Gotchas (caused real pain — heed them):**

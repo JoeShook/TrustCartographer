@@ -26,6 +26,7 @@ Now a **.NET Aspire** multi-service solution (orchestrated by `src/TrustCartogra
 ## Current Status (2026-05-31)
 - **Live trust triangle complete**: real OID4VCI issuance (Issuer→Holder) + real OID4VP verification (Holder→Verifier), all over HTTP through the YARP proxy. All four services have Blazor UIs.
 - **Two learning surfaces**: `/practitioner-license` is a *local simulation* of the whole triangle (animated, tamper toggles); `/live-flow` replays the *real* captured HTTP as the same animated sequence diagram (Trigger issuance / Trigger verification / Run full demo).
+- **PIA program started** (implements the Cambia paper; cited+linked, not copied): grouped workflows under `/pia`. Phase A1 done — `Core/SdJwt/SdJwtService` (SD-JWT selective disclosure, SDK-grade) + `SdJwtViewer` + live Minor Age Check (`/pia/minor-age-check`). Backlog: delegated proofing+IDIAL, issuance pathways A/B/C, custody transfer, verify→OIDC token, Tier-4 trust list. Docs: `docs/use-cases/portable-identity-assurance/`. See [[reference-cambia-minor-identity-proposal]].
 - **Deliberate teaching hook**: the Verifier trusts any did:key issuer (no trust list) — the on-ramp to the comparative end goal. See [Trust triangle complete](project_trust_triangle_complete.md).
 - **Next**: Phase 5 — trust frameworks + comparative views (SSI vs Google A2A vs UDAP), e.g. issuer trust lists / UDAP communities.
 
@@ -46,3 +47,4 @@ Now a **.NET Aspire** multi-service solution (orchestrated by `src/TrustCartogra
 - [Trust triangle complete](project_trust_triangle_complete.md) — OID4VCI issuance + OID4VP verification live + animated; verifier's missing trust list is the deliberate UDAP hook
 - [How to run](reference_running_the_app.md) — Aspire AppHost, ports 7257/17051, dashboard token rotates per launch, one-instance-only gotcha
 - [No background AppHost](feedback_no_background_apphost.md) — don't leave verification AppHosts running; they collide with the user's run and break dashboard login
+- [Cambia minor-identity proposal](reference_cambia_minor_identity_proposal.md) — external OID4VC/SD-JWT healthcare proposal that maps onto the trust triangle + Phase 5; a comparative foil to UDAP

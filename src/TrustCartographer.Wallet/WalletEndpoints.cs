@@ -1,6 +1,8 @@
-using TrustCartographer.Holder.Services;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 
-namespace TrustCartographer.Holder.Endpoints;
+namespace TrustCartographer.Wallet;
 
 /// <summary>
 /// Wallet HTTP surface. <c>/wallet/redeem-offer</c> kicks off the full OID4VCI

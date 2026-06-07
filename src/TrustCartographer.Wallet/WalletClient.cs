@@ -1,7 +1,8 @@
 using System.Net.Http.Json;
+using Microsoft.Extensions.Logging;
 using TrustCartographer.Core.Oid4Vci;
 
-namespace TrustCartographer.Holder.Services;
+namespace TrustCartographer.Wallet;
 
 /// <summary>
 /// Drives the OID4VCI 1.0 pre-authorized code flow on behalf of the wallet:

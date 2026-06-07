@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 
-namespace TrustCartographer.Holder.Services;
+namespace TrustCartographer.Wallet;
 
 /// <summary>
 /// Holds credentials the wallet has received from any Issuer. In-memory, per-process.

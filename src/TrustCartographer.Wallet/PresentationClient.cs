@@ -1,8 +1,9 @@
 using System.Net.Http.Json;
+using Microsoft.Extensions.Logging;
 using TrustCartographer.Core.Oid4Vp;
 using TrustCartographer.Core.SdJwt;
 
-namespace TrustCartographer.Holder.Services;
+namespace TrustCartographer.Wallet;
 
 /// <summary>
 /// Drives the OID4VP 1.0 presentation flow on behalf of the wallet:

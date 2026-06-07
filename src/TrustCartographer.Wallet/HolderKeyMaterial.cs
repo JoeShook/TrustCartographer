@@ -1,7 +1,7 @@
 using TrustCartographer.Core.Models;
 using TrustCartographer.Core.Services;
 
-namespace TrustCartographer.Holder.Services;
+namespace TrustCartographer.Wallet;
 
 /// <summary>
 /// The wallet's long-lived Ed25519 key + <c>did:key</c>. Phase 2A uses one key

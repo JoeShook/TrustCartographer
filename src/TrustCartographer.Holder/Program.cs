@@ -3,8 +3,7 @@ using TrustCartographer.Core.Oid4Vci;
 using TrustCartographer.Core.Oid4Vp;
 using TrustCartographer.Core.Services;
 using TrustCartographer.Holder.Components;
-using TrustCartographer.Holder.Endpoints;
-using TrustCartographer.Holder.Services;
+using TrustCartographer.Wallet;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();

@@ -1,4 +1,5 @@
 using TrustCartographer.Core.Oid4Vci;
+using TrustCartographer.Core.SdJwt;
 
 namespace TrustCartographer.Issuer.Services;
 
@@ -10,6 +11,7 @@ namespace TrustCartographer.Issuer.Services;
 public sealed class CredentialCatalog
 {
     public const string PractitionerLicenseId = "PractitionerLicenseCredential";
+    public const string MinorIdentityId = "MinorIdentityCredential";
 
     public IReadOnlyDictionary<string, CredentialConfiguration> SupportedConfigurations { get; } =
         new Dictionary<string, CredentialConfiguration>
@@ -40,6 +42,30 @@ public sealed class CredentialCatalog
                         Description = "Asserts an active medical license issued by the State Medical Board."
                     }
                 ]
+            },
+            [MinorIdentityId] = new CredentialConfiguration
+            {
+                Format = SdJwtConstants.SdJwtVcType,
+                Scope = MinorIdentityId,
+                CryptographicBindingMethodsSupported = ["did:key"],
+                CredentialSigningAlgValuesSupported = ["EdDSA"],
+                ProofTypesSupported = new Dictionary<string, ProofTypeMetadata>
+                {
+                    ["jwt"] = new ProofTypeMetadata { ProofSigningAlgValuesSupported = ["EdDSA"] }
+                },
+                CredentialDefinition = new CredentialDefinition
+                {
+                    Type = ["VerifiableCredential", MinorIdentityId]
+                },
+                Display =
+                [
+                    new DisplayInfo
+                    {
+                        Name = "Minor Identity Credential",
+                        Locale = "en-US",
+                        Description = "Portable minor identity with selectively-disclosable demographics and age claims (SD-JWT VC)."
+                    }
+                ]
             }
         };
 
@@ -53,6 +79,14 @@ public sealed class CredentialCatalog
                 ["specialty"] = "Internal Medicine",
                 ["jurisdiction"] = "WA"
             },
+            MinorIdentityId => new Dictionary<string, object?>
+            {
+                ["given_name"] = "Alex",
+                ["family_name"] = "Rivera",
+                ["birthdate"] = "2012-04-01",
+                ["age_over_13"] = true,
+                ["age_over_18"] = false
+            },
             _ => throw new KeyNotFoundException($"Unknown credential_configuration_id: {id}")
         };
 
@@ -60,6 +94,7 @@ public sealed class CredentialCatalog
         id switch
         {
             PractitionerLicenseId => PractitionerLicenseId,
+            MinorIdentityId => MinorIdentityId,
             _ => throw new KeyNotFoundException($"Unknown credential_configuration_id: {id}")
         };
 }

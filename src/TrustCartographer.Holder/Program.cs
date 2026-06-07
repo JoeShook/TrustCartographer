@@ -16,6 +16,7 @@ builder.Services.AddSingleton<PopJwtService>();
 builder.Services.AddSingleton<HolderKeyMaterial>();
 builder.Services.AddSingleton<WalletStore>();
 builder.Services.AddSingleton<VpService>();
+builder.Services.AddSingleton<TrustCartographer.Core.SdJwt.SdJwtService>();
 
 // Wallet clients use outbound HttpClients for OID4VCI (issuance) and OID4VP (presentation)
 builder.Services.AddHttpClient<WalletClient>();

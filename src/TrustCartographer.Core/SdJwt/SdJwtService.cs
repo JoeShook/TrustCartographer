@@ -112,6 +112,35 @@ public sealed class SdJwtService
             payload.ToJsonString(Pretty));
     }
 
+    /// <summary>
+    /// Parse a stored combined SD-JWT (<c>jwt~d1~d2~…~</c>) back into its issuer JWT and
+    /// decoded disclosures so a holder can choose which to present. A trailing Key Binding
+    /// JWT, if present, is ignored.
+    /// </summary>
+    public (string IssuerJwt, IReadOnlyList<Disclosure> Disclosures) ParseIssued(string combined)
+    {
+        var segs = combined.Split(SdJwtConstants.Delimiter);
+        var issuerJwt = segs[0];
+        var list = new List<Disclosure>();
+        for (var i = 1; i < segs.Length; i++)
+        {
+            var seg = segs[i];
+            if (seg.Length == 0) continue;
+            try
+            {
+                if (JsonNode.Parse(Base64Url.DecodeToString(seg)) is JsonArray a && a.Count == 3)
+                {
+                    var salt = a[0]!.GetValue<string>();
+                    var name = a[1]!.GetValue<string>();
+                    var digest = Base64Url.Encode(_crypto.ComputeSha256(seg));
+                    list.Add(new Disclosure(name, a[2]?.ToJsonString(Compact) ?? "null", salt, seg, digest));
+                }
+            }
+            catch { /* not a disclosure (e.g. a KB-JWT) — skip */ }
+        }
+        return (issuerJwt, list);
+    }
+
     // ───────────────────────── Present ─────────────────────────
 
     /// <summary>

@@ -87,6 +87,35 @@ public partial class LiveFlow : ComponentBase, IDisposable
             return await RequestAndPresentAsync(http);
         });
 
+    // Portable Identity Assurance: issue a real SD-JWT minor-identity credential, then
+    // present ONLY age_over_18 (selective disclosure) to the verifier — all over the proxy.
+    private Task RunMinorAgeCheckAsync() =>
+        RunAsync("AGE CLAIM VERIFIED", "REJECTED", async http =>
+        {
+            var offerResp = await http.PostAsJsonAsync("issuer/credential-offer",
+                new { credentialConfigurationId = "MinorIdentityCredential" });
+            offerResp.EnsureSuccessStatusCode();
+            using var offerDoc = JsonDocument.Parse(await offerResp.Content.ReadAsStringAsync());
+            var offerUri = offerDoc.RootElement.GetProperty("offerUri").GetString()
+                ?? throw new InvalidOperationException("Issuer did not return offerUri.");
+            var redeemResp = await http.PostAsJsonAsync("holder/wallet/redeem-offer", new { offerUri });
+            redeemResp.EnsureSuccessStatusCode();
+
+            var reqResp = await http.PostAsJsonAsync("verifier/presentation-request",
+                new { credentialType = "MinorIdentityCredential", requiredClaims = new[] { "age_over_18" }, format = "vc+sd-jwt" });
+            reqResp.EnsureSuccessStatusCode();
+            using var reqDoc = JsonDocument.Parse(await reqResp.Content.ReadAsStringAsync());
+            var requestUri = reqDoc.RootElement.GetProperty("requestUri").GetString()
+                ?? throw new InvalidOperationException("Verifier did not return requestUri.");
+
+            var presentResp = await http.PostAsJsonAsync("holder/wallet/present", new { requestUri });
+            presentResp.EnsureSuccessStatusCode();
+            using var pDoc = JsonDocument.Parse(await presentResp.Content.ReadAsStringAsync());
+            var status = pDoc.RootElement.TryGetProperty("status", out var s) ? s.GetString() : null;
+            var reason = pDoc.RootElement.TryGetProperty("reason", out var r) ? r.GetString() : null;
+            return (status == "accepted", reason);
+        });
+
     /// <summary>
     /// Shared run harness: clear capture + diagram, run <paramref name="flow"/> against
     /// a loopback client (so every hop is proxied + captured), then snapshot the captured

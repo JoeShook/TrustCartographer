@@ -48,4 +48,12 @@ public record PresentationDefinition
 
     [JsonPropertyName("purpose")]
     public string? Purpose { get; init; }
+
+    /// <summary>For SD-JWT requests: the specific claims the verifier wants disclosed.</summary>
+    [JsonPropertyName("required_claims")]
+    public IReadOnlyList<string>? RequiredClaims { get; init; }
+
+    /// <summary>Credential format: "jwt_vc" (default VP-JWT) or "vc+sd-jwt".</summary>
+    [JsonPropertyName("format")]
+    public string? Format { get; init; }
 }

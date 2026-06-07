@@ -12,6 +12,7 @@ builder.AddServiceDefaults();
 builder.Services.AddSingleton<CryptoService>();
 builder.Services.AddSingleton<DidKeyService>();
 builder.Services.AddSingleton<VcService>();
+builder.Services.AddSingleton<TrustCartographer.Core.SdJwt.SdJwtService>();
 builder.Services.AddSingleton<PopJwtService>();
 builder.Services.AddSingleton<IssuerKeyMaterial>();
 builder.Services.AddSingleton<IssuerStores>();

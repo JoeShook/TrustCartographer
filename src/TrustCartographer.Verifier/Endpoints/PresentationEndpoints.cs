@@ -1,6 +1,9 @@
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
+using TrustCartographer.Core.Oid4Vci;
 using TrustCartographer.Core.Oid4Vp;
+using TrustCartographer.Core.SdJwt;
+using TrustCartographer.Core.Services;
 using TrustCartographer.Verifier.Services;
 
 namespace TrustCartographer.Verifier.Endpoints;
@@ -18,13 +21,16 @@ public static class PresentationEndpoints
     {
         // Mint an authorization request. The demo UI calls this to obtain a
         // request URI it then hands to the Holder wallet.
-        app.MapPost("/presentation-request", (HttpContext ctx, VerifierStores stores, PresentationCatalog catalog) =>
+        app.MapPost("/presentation-request", (HttpContext ctx, VerifierStores stores, PresentationCatalog catalog,
+            [FromBody] CreatePresentationRequestBody? body) =>
         {
             var definition = new PresentationDefinition
             {
                 Id = $"pd-{Guid.NewGuid():N}",
-                RequiredCredentialType = PresentationCatalog.RequiredCredentialType,
-                Purpose = catalog.Purpose
+                RequiredCredentialType = body?.CredentialType ?? PresentationCatalog.RequiredCredentialType,
+                Purpose = catalog.Purpose,
+                RequiredClaims = body?.RequiredClaims,
+                Format = body?.Format
             };
             var pending = stores.CreateRequest(definition, TimeSpan.FromMinutes(5));
             var request = BuildRequest(ctx, pending);
@@ -48,6 +54,8 @@ public static class PresentationEndpoints
             HttpContext ctx,
             VerifierStores stores,
             VpService vp,
+            SdJwtService sdJwt,
+            DidKeyService didKey,
             PresentationCatalog catalog,
             [FromBody] PresentationResponseSubmission body) =>
         {
@@ -64,30 +72,63 @@ public static class PresentationEndpoints
                 return Reject(stores, "Nonce was unknown, expired, or already used.");
             }
 
-            var result = vp.VerifyPresentation(
-                body.VpToken,
-                expectedAudience: VerifierBaseUrl(ctx),
-                expectedNonce: pending.Nonce,
-                requiredCredentialType: pending.Definition.RequiredCredentialType);
-
             stores.Complete(body.State);
 
-            var status = result.Valid ? "accepted" : "rejected";
+            // An SD-JWT presentation (contains '~') is verified with SdJwtService; a plain
+            // VP-JWT goes through VpService. Both resolve the issuer key from its did:key.
+            PresentationResponseResult outcome;
+            if (body.VpToken.Contains(SdJwtConstants.Delimiter))
+            {
+                outcome = VerifySdJwt(body.VpToken, VerifierBaseUrl(ctx), pending, sdJwt, didKey);
+            }
+            else
+            {
+                var result = vp.VerifyPresentation(
+                    body.VpToken,
+                    expectedAudience: VerifierBaseUrl(ctx),
+                    expectedNonce: pending.Nonce,
+                    requiredCredentialType: pending.Definition.RequiredCredentialType);
+                outcome = new PresentationResponseResult(
+                    result.Valid ? "accepted" : "rejected", result.Message,
+                    result.HolderDid, result.IssuerDid, result.CredentialType);
+            }
+
             stores.RecordVerification(new VerificationRecord(
                 At: DateTimeOffset.UtcNow,
-                Status: status,
-                HolderDid: result.HolderDid,
-                IssuerDid: result.IssuerDid,
-                CredentialType: result.CredentialType,
-                Reason: result.Message));
+                Status: outcome.Status,
+                HolderDid: outcome.HolderDid,
+                IssuerDid: outcome.IssuerDid,
+                CredentialType: outcome.CredentialType,
+                Reason: outcome.Reason));
 
-            return Results.Ok(new PresentationResponseResult(
-                Status: status,
-                Reason: result.Message,
-                HolderDid: result.HolderDid,
-                IssuerDid: result.IssuerDid,
-                CredentialType: result.CredentialType));
+            return Results.Ok(outcome);
         });
+    }
+
+    private static PresentationResponseResult VerifySdJwt(
+        string vpToken, string audience, PendingRequest pending, SdJwtService sdJwt, DidKeyService didKey)
+    {
+        string issuerDid;
+        try
+        {
+            var issuerJwt = vpToken.Split(SdJwtConstants.Delimiter)[0];
+            using var doc = System.Text.Json.JsonDocument.Parse(Base64Url.DecodeToString(issuerJwt.Split('.')[1]));
+            issuerDid = doc.RootElement.GetProperty("iss").GetString() ?? "";
+        }
+        catch (Exception ex)
+        {
+            return new PresentationResponseResult("rejected", $"Could not read SD-JWT issuer: {ex.Message}", null, null, null);
+        }
+
+        byte[] issuerPublicKey;
+        try { issuerPublicKey = didKey.DecodeEd25519(issuerDid); }
+        catch (Exception ex)
+        {
+            return new PresentationResponseResult("rejected", $"Could not resolve issuer DID {issuerDid}: {ex.Message}", null, issuerDid, null);
+        }
+
+        var r = sdJwt.Verify(vpToken, issuerPublicKey, audience, pending.Nonce, pending.Definition.RequiredClaims);
+        return new PresentationResponseResult(r.Valid ? "accepted" : "rejected", r.Message, r.HolderDid, r.IssuerDid, r.Vct);
     }
 
     private static IResult Reject(VerifierStores stores, string reason)
@@ -124,6 +165,13 @@ public record CreatePresentationRequestResponse(
     PresentationRequest Request,
     string RequestUri,
     string State);
+
+public record CreatePresentationRequestBody
+{
+    [JsonPropertyName("credentialType")] public string? CredentialType { get; init; }
+    [JsonPropertyName("requiredClaims")] public IReadOnlyList<string>? RequiredClaims { get; init; }
+    [JsonPropertyName("format")] public string? Format { get; init; }
+}
 
 public record PresentationResponseSubmission
 {

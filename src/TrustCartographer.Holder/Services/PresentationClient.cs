@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using TrustCartographer.Core.Oid4Vp;
+using TrustCartographer.Core.SdJwt;
 
 namespace TrustCartographer.Holder.Services;
 
@@ -16,6 +17,7 @@ public sealed class PresentationClient
     private readonly HolderKeyMaterial _keys;
     private readonly WalletStore _store;
     private readonly VpService _vp;
+    private readonly SdJwtService _sdJwt;
     private readonly ILogger<PresentationClient> _log;
 
     public PresentationClient(
@@ -23,12 +25,14 @@ public sealed class PresentationClient
         HolderKeyMaterial keys,
         WalletStore store,
         VpService vp,
+        SdJwtService sdJwt,
         ILogger<PresentationClient> log)
     {
         _http = http;
         _keys = keys;
         _store = store;
         _vp = vp;
+        _sdJwt = sdJwt;
         _log = log;
     }
 
@@ -54,14 +58,27 @@ public sealed class PresentationClient
             ?? throw new InvalidOperationException(
                 $"No credential of type '{required}' is held by this wallet. Redeem an offer first.");
 
-        // 3. Build the holder-signed Verifiable Presentation, bound to the verifier.
-        var vpToken = _vp.BuildHolderVpJwt(
-            holderPrivateKey: _keys.KeyPair.PrivateKey,
-            holderPublicKey: _keys.KeyPair.PublicKey,
-            holderDid: _keys.Did,
-            audience: request.ClientId,
-            nonce: request.Nonce,
-            vcJwt: credential.Jwt);
+        // 3. Build the presentation. An SD-JWT credential (contains '~') is presented by
+        //    revealing only the requested disclosures + a Key Binding JWT; a plain JWT-VC is
+        //    wrapped in a holder-signed VP-JWT.
+        string vpToken;
+        if (credential.Jwt.Contains(SdJwtConstants.Delimiter))
+        {
+            var (issuerJwt, disclosures) = _sdJwt.ParseIssued(credential.Jwt);
+            var wanted = request.PresentationDefinition.RequiredClaims ?? Array.Empty<string>();
+            var chosen = disclosures.Where(d => wanted.Contains(d.ClaimName)).ToList();
+            vpToken = _sdJwt.Present(issuerJwt, chosen, _keys.KeyPair.PrivateKey, request.ClientId, request.Nonce);
+        }
+        else
+        {
+            vpToken = _vp.BuildHolderVpJwt(
+                holderPrivateKey: _keys.KeyPair.PrivateKey,
+                holderPublicKey: _keys.KeyPair.PublicKey,
+                holderDid: _keys.Did,
+                audience: request.ClientId,
+                nonce: request.Nonce,
+                vcJwt: credential.Jwt);
+        }
 
         // 4. direct_post the vp_token back to the verifier's response_uri.
         var resp = await _http.PostAsJsonAsync(

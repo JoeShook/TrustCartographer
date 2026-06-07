@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using TrustCartographer.Core.Oid4Vci;
+using TrustCartographer.Core.SdJwt;
 using TrustCartographer.Core.Services;
 using TrustCartographer.Issuer.Services;
 
@@ -168,6 +169,8 @@ public static class Oid4VciEndpoints
             CredentialCatalog catalog,
             PopJwtService pop,
             VcService vc,
+            DidKeyService didKey,
+            SdJwtService sdJwt,
             [FromBody] CredentialRequest body) =>
         {
             // 1. Bearer access token
@@ -211,25 +214,49 @@ public static class Oid4VciEndpoints
                     ErrorDescription = verification.Message
                 });
 
-            // 4. Issue the JWT-VC bound to the holder's DID
-            var issued = vc.IssueJwtVc(
-                issuerDid: keys.Did,
-                issuerVerificationMethodId: keys.VerificationMethodId,
-                issuerPrivateKey: keys.KeyPair.PrivateKey,
-                subjectDid: verification.HolderDidKey,
-                credentialType: catalog.CredentialTypeFor(configId),
-                claims: session.SubjectClaims,
-                validity: TimeSpan.FromDays(730));
+            // 4. Issue the credential bound to the holder's DID. The format the catalog
+            //    advertises decides JWT-VC vs SD-JWT VC. For SD-JWT the holder key (from
+            //    the PoP proof) becomes the cnf key binding.
+            var config = catalog.SupportedConfigurations[configId];
+            string credentialString;
+            string credentialId;
+            if (config.Format == SdJwtConstants.SdJwtVcType)
+            {
+                var holderPublicKey = didKey.DecodeEd25519(verification.HolderDidKey);
+                var sdIssued = sdJwt.IssueSdJwtVc(
+                    issuerDid: keys.Did,
+                    issuerVerificationMethodId: keys.VerificationMethodId,
+                    issuerPrivateKey: keys.KeyPair.PrivateKey,
+                    vct: catalog.CredentialTypeFor(configId),
+                    selectivelyDisclosableClaims: session.SubjectClaims,
+                    holderCnfJwk: Jwk.FromEd25519PublicKey(holderPublicKey),
+                    validity: TimeSpan.FromDays(365));
+                credentialString = sdIssued.Combined;
+                credentialId = $"urn:uuid:{Guid.NewGuid()}";
+            }
+            else
+            {
+                var issued = vc.IssueJwtVc(
+                    issuerDid: keys.Did,
+                    issuerVerificationMethodId: keys.VerificationMethodId,
+                    issuerPrivateKey: keys.KeyPair.PrivateKey,
+                    subjectDid: verification.HolderDidKey,
+                    credentialType: catalog.CredentialTypeFor(configId),
+                    claims: session.SubjectClaims,
+                    validity: TimeSpan.FromDays(730));
+                credentialString = issued.Jwt;
+                credentialId = issued.CredentialId;
+            }
 
             stores.RecordIssuance(new IssuanceRecord(
                 At: DateTimeOffset.UtcNow,
                 SubjectDid: verification.HolderDidKey,
                 CredentialConfigurationId: configId,
-                CredentialId: issued.CredentialId));
+                CredentialId: credentialId));
 
             return Results.Ok(new CredentialResponse
             {
-                Credentials = [new IssuedCredential { Credential = issued.Jwt }]
+                Credentials = [new IssuedCredential { Credential = credentialString }]
             });
         });
     }

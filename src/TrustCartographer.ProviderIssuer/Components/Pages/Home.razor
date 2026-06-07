@@ -1,0 +1,59 @@
+@page "/"
+@inject IssuerKeyMaterial Keys
+@inject CredentialCatalog Catalog
+@inject IssuerProfile Profile
+
+<PageTitle>Northwest Family Clinic (Provider Issuer)</PageTitle>
+
+<h1>Northwest Family Clinic</h1>
+<p class="muted">
+    OID4VCI 1.0 issuer for the <strong>Minor Identity Credential</strong> as an
+    <code>vc+sd-jwt</code>. This issuer operates <strong>@Profile.PathwayLabel</strong>:
+    identity is verified in person against a government photo ID, so every credential it mints
+    carries that assurance basis inside the SD-JWT (selectively disclosable).
+</p>
+
+<FluentCard Style="margin-bottom: 1rem;">
+    <h3>Assurance pathway</h3>
+    <table class="kv">
+        <tbody>
+            <tr><td>Pathway</td><td><code>@Profile.Pathway</code></td></tr>
+            <tr><td>Method</td><td>provider-in-person</td></tr>
+            <tr><td>Assurance level</td><td><strong>IDIAL3</strong></td></tr>
+            <tr><td>Basis</td><td>Identity verified in person via government photo ID at the clinic.</td></tr>
+        </tbody>
+    </table>
+    <p class="muted">
+        Compare with the <em>payer</em> issuer (enrollment, Pathway A) and the
+        <em>CSP</em> issuer (delegated proofing, Pathway C) to see how the same credential
+        carries a different assurance basis depending on how identity was established.
+    </p>
+</FluentCard>
+
+<FluentCard Style="margin-bottom: 1rem;">
+    <h3>Issuer Identity</h3>
+    <FluentLabel Typo="Typography.Body">DID</FluentLabel>
+    <pre class="codeblock">@Keys.Did</pre>
+    <FluentLabel Typo="Typography.Body">Verification Method</FluentLabel>
+    <pre class="codeblock">@Keys.VerificationMethodId</pre>
+</FluentCard>
+
+<FluentCard>
+    <h3>Supported credentials</h3>
+    <ul>
+        @foreach (var (id, cfg) in Catalog.SupportedConfigurations)
+        {
+            <li><strong>@id</strong> — format <code>@cfg.Format</code></li>
+        }
+    </ul>
+    <p class="muted">
+        Raw metadata:
+        <a href=".well-known/openid-credential-issuer" target="_blank">/.well-known/openid-credential-issuer</a>.
+    </p>
+</FluentCard>
+
+<style>
+    .kv { font-size: 0.85rem; border-collapse: collapse; }
+    .kv td { padding: 0.25rem 0.8rem 0.25rem 0; vertical-align: top; }
+    .kv td:first-child { opacity: 0.7; white-space: nowrap; }
+</style>

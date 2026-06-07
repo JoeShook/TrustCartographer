@@ -1,0 +1,41 @@
+@page "/activity"
+@implements IDisposable
+@inject IssuerStores Stores
+
+<PageTitle>Issuance Activity</PageTitle>
+
+<h1>Issuance Activity</h1>
+<p class="muted">Most recent successful credential issuances. Auto-refreshes every 2 seconds.</p>
+
+@if (records.Count == 0)
+{
+    <FluentCard>
+        <p class="muted"><em>No credentials issued yet. Mint an offer (with a CSP proofing-event id) and redeem it from a wallet.</em></p>
+    </FluentCard>
+}
+else
+{
+    <FluentDataGrid Items="@records.AsQueryable()" GridTemplateColumns="1.4fr 1.2fr 2fr 2.5fr">
+        <PropertyColumn Title="When (local)" Property="@(r => r.At.ToLocalTime().ToString("HH:mm:ss"))" />
+        <PropertyColumn Title="Credential type" Property="@(r => r.CredentialConfigurationId)" />
+        <PropertyColumn Title="Credential ID" Property="@(r => r.CredentialId)" />
+        <PropertyColumn Title="Subject DID" Property="@(r => r.SubjectDid)" />
+    </FluentDataGrid>
+}
+
+@code {
+    private IReadOnlyList<IssuanceRecord> records = Array.Empty<IssuanceRecord>();
+    private Timer? timer;
+
+    protected override void OnInitialized()
+    {
+        records = Stores.IssuanceLog();
+        timer = new Timer(_ =>
+        {
+            records = Stores.IssuanceLog();
+            _ = InvokeAsync(StateHasChanged);
+        }, null, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(2));
+    }
+
+    public void Dispose() => timer?.Dispose();
+}

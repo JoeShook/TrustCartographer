@@ -1,0 +1,21 @@
+@inherits LayoutComponentBase
+
+<AppShell BrandText="Northwest Family Clinic" BrandSublabel="Minor Identity issuer — Pathway B (in-person)">
+    <NavLinks>
+        <FluentNavLink Href="" Match="NavLinkMatch.All"
+                       Icon="@(new RegularIcons.Size20.Home())">
+            Overview
+        </FluentNavLink>
+        <FluentNavLink Href="mint"
+                       Icon="@(new RegularIcons.Size20.Add())">
+            Mint
+        </FluentNavLink>
+        <FluentNavLink Href="activity"
+                       Icon="@(new RegularIcons.Size20.History())">
+            Activity
+        </FluentNavLink>
+    </NavLinks>
+    <Body>
+        @Body
+    </Body>
+</AppShell>

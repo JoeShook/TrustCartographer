@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 using TrustCartographer.Core.Oid4Vci;
 using TrustCartographer.Core.SdJwt;
 using TrustCartographer.Core.Services;
@@ -28,7 +29,7 @@ public static class Oid4VciEndpoints
 
     private static void MapMetadata(IEndpointRouteBuilder app)
     {
-        app.MapGet(Oid4VciConstants.IssuerMetadataPath, (HttpContext ctx, CredentialCatalog catalog) =>
+        app.MapGet(Oid4VciConstants.IssuerMetadataPath, (HttpContext ctx, CredentialCatalog catalog, IssuerProfile profile) =>
         {
             var issuerUrl = IssuerBaseUrl(ctx);
             return Results.Ok(new IssuerMetadata
@@ -40,7 +41,7 @@ public static class Oid4VciEndpoints
                 CredentialConfigurationsSupported = catalog.SupportedConfigurations,
                 Display =
                 [
-                    new DisplayInfo { Name = "State Medical Board (TrustCartographer demo)", Locale = "en-US" }
+                    new DisplayInfo { Name = profile.Name, Locale = "en-US" }
                 ]
             });
         });
@@ -64,7 +65,7 @@ public static class Oid4VciEndpoints
     {
         // Admin-style mint endpoint. The demo UI calls this to obtain an offer
         // URI it then hands to the Holder wallet.
-        app.MapPost("/credential-offer", (
+        app.MapPost("/credential-offer", async (
             HttpContext ctx,
             CredentialCatalog catalog,
             IssuerStores stores,
@@ -77,6 +78,31 @@ public static class Oid4VciEndpoints
             var claims = body?.SubjectClaims is { Count: > 0 }
                 ? body.SubjectClaims
                 : catalog.DefaultSubjectClaimsFor(configId);
+
+            // Optional assurance enrichment: if this host registered an IAssuranceSource,
+            // it decides whether issuance may proceed and contributes assurance claims that
+            // travel inside the credential. Absent a source, behaviour is unchanged.
+            var assuranceSource = ctx.RequestServices.GetService<IAssuranceSource>();
+            if (assuranceSource is not null)
+            {
+                var resolution = await assuranceSource.ResolveAsync(
+                    new AssuranceResolutionContext(configId, body?.ProofingEventId, ProxyOrigin(ctx)),
+                    ctx.RequestAborted);
+
+                if (!resolution.Allowed)
+                    return Results.BadRequest(new OAuthErrorResponse
+                    {
+                        Error = "assurance_insufficient",
+                        ErrorDescription = resolution.RefusalReason ?? "Issuance refused on assurance grounds."
+                    });
+
+                if (resolution.Claims is { Count: > 0 })
+                {
+                    var merged = new Dictionary<string, object?>(claims);
+                    foreach (var (k, v) in resolution.Claims) merged[k] = v;
+                    claims = merged;
+                }
+            }
 
             var record = stores.CreateOffer(configId, claims);
 
@@ -274,6 +300,10 @@ public static class Oid4VciEndpoints
         return $"{req.Scheme}://{req.Host}{pathBase}";
     }
 
+    /// <summary>The public origin (scheme://host, no path prefix) the request arrived through —
+    /// what an <see cref="IAssuranceSource"/> uses to reach peer services via the same proxy.</summary>
+    private static string ProxyOrigin(HttpContext ctx) => $"{ctx.Request.Scheme}://{ctx.Request.Host}";
+
     private static string? ExtractBearer(HttpContext ctx)
     {
         var header = ctx.Request.Headers.Authorization.ToString();
@@ -305,7 +335,8 @@ public static class Oid4VciEndpoints
 
 public record CreateOfferRequest(
     string? CredentialConfigurationId,
-    IReadOnlyDictionary<string, object?>? SubjectClaims);
+    IReadOnlyDictionary<string, object?>? SubjectClaims,
+    string? ProofingEventId = null);
 
 public record CreateOfferResponse(
     CredentialOffer Offer,

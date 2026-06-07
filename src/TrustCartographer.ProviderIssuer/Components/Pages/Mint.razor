@@ -1,0 +1,116 @@
+@page "/mint"
+@inject CredentialCatalog Catalog
+@inject IHttpClientFactory HttpFactory
+@inject NavigationManager Nav
+
+<PageTitle>Mint Credential Offer</PageTitle>
+
+<h1>Mint a Credential Offer</h1>
+<p class="muted">
+    Calls this issuer's <code>/credential-offer</code> endpoint, which applies the
+    <strong>Pathway B</strong> assurance basis (it travels in the credential) and returns a
+    by-value OID4VCI offer URI. Hand the URI to a wallet (e.g. the Guardian wallet at
+    <code>/holder/redeem</code>) to complete issuance.
+</p>
+
+<FluentCard Style="margin-bottom: 1rem;">
+    <h3>Configuration</h3>
+    <FluentSelect TOption="string"
+                  Label="Credential type"
+                  Items="@Catalog.SupportedConfigurations.Keys"
+                  OptionValue="@(s => s)"
+                  OptionText="@(s => s)"
+                  @bind-Value="selectedConfigId" />
+
+    <FluentStack Orientation="Orientation.Horizontal" Style="margin-top: 1rem;">
+        <FluentButton Appearance="Appearance.Accent" OnClick="MintAsync">@(isMinting ? "Minting…" : "Mint offer")</FluentButton>
+        <FluentButton Appearance="Appearance.Neutral"
+                      Disabled="@string.IsNullOrEmpty(offerUri)"
+                      OnClick="SendToWalletAsync">
+            @(isSending ? "Sending…" : "Send to Guardian wallet")
+        </FluentButton>
+        @if (!string.IsNullOrEmpty(statusMessage))
+        {
+            <span class="muted">@statusMessage</span>
+        }
+    </FluentStack>
+</FluentCard>
+
+@if (!string.IsNullOrEmpty(offerUri))
+{
+    <FluentCard Style="margin-bottom: 1rem;">
+        <h3>Credential Offer URI</h3>
+        <pre class="codeblock">@offerUri</pre>
+    </FluentCard>
+}
+
+@code {
+    private string selectedConfigId = CredentialCatalog.MinorIdentityId;
+    private string? offerUri;
+    private string? statusMessage;
+    private bool isMinting;
+    private bool isSending;
+
+    private async Task MintAsync()
+    {
+        isMinting = true;
+        statusMessage = null;
+        offerUri = null;
+        try
+        {
+            var http = HttpFactory.CreateClient("loopback");
+            http.BaseAddress = new Uri(Nav.BaseUri); // this app's proxied root, e.g. …/provider-issuer/
+            var resp = await http.PostAsJsonAsync("credential-offer", new
+            {
+                credentialConfigurationId = selectedConfigId
+            });
+            if (!resp.IsSuccessStatusCode)
+            {
+                statusMessage = $"Mint failed: {(int)resp.StatusCode} {await resp.Content.ReadAsStringAsync()}";
+                return;
+            }
+            var offer = await resp.Content.ReadFromJsonAsync<CreateOfferResponse>();
+            offerUri = offer?.OfferUri;
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Mint failed: {ex.Message}";
+        }
+        finally
+        {
+            isMinting = false;
+        }
+    }
+
+    private async Task SendToWalletAsync()
+    {
+        if (string.IsNullOrEmpty(offerUri)) return;
+        isSending = true;
+        statusMessage = null;
+        try
+        {
+            var http = HttpFactory.CreateClient("loopback");
+            http.BaseAddress = new Uri(ProxyRootFromBase(Nav.BaseUri));
+            var resp = await http.PostAsJsonAsync("holder/wallet/redeem-offer", new { offerUri });
+            resp.EnsureSuccessStatusCode();
+            statusMessage = "Sent. See /live-flow on TC.Web for the captured trace.";
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Send failed: {ex.Message}";
+        }
+        finally
+        {
+            isSending = false;
+        }
+    }
+
+    private static string ProxyRootFromBase(string baseUri)
+    {
+        var uri = new Uri(baseUri);
+        var trimmed = uri.AbsolutePath.TrimEnd('/');
+        var slash = trimmed.LastIndexOf('/');
+        var parent = slash > 0 ? trimmed[..slash] : "";
+        return $"{uri.Scheme}://{uri.Authority}{parent}/";
+    }
+}

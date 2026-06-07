@@ -16,6 +16,12 @@ builder.Services.AddSingleton<PopJwtService>();
 builder.Services.AddSingleton<IssuerKeyMaterial>();
 builder.Services.AddSingleton<IssuerStores>();
 builder.Services.AddSingleton<CredentialCatalog>();
+builder.Services.AddSingleton(new IssuerProfile
+{
+    Name = "State Medical Board (TrustCartographer demo)",
+    Pathway = "trust-triangle",
+    PathwayLabel = "Practitioner license (trust-triangle demo)"
+});
 
 // Loopback HttpClient used by the Mint page's "Send to local Holder wallet"
 // button — BaseAddress is set per-request from NavigationManager.BaseUri.

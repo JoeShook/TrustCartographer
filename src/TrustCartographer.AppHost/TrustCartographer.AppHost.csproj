@@ -10,6 +10,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TrustCartographer.IdentityCsp\TrustCartographer.IdentityCsp.csproj" />
+    <ProjectReference Include="..\TrustCartographer.PayerIssuer\TrustCartographer.PayerIssuer.csproj" />
+    <ProjectReference Include="..\TrustCartographer.ProviderIssuer\TrustCartographer.ProviderIssuer.csproj" />
+    <ProjectReference Include="..\TrustCartographer.CspIssuer\TrustCartographer.CspIssuer.csproj" />
     <ProjectReference Include="..\TrustCartographer.Issuer\TrustCartographer.Issuer.csproj" />
     <ProjectReference Include="..\TrustCartographer.Holder\TrustCartographer.Holder.csproj" />
     <ProjectReference Include="..\TrustCartographer.Verifier\TrustCartographer.Verifier.csproj" />

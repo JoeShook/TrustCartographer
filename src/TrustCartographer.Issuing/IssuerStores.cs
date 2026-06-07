@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using TrustCartographer.Core.Oid4Vci;
 
-namespace TrustCartographer.Issuer.Services;
+namespace TrustCartographer.Issuing;
 
 /// <summary>
 /// In-memory state for Phase 2A: pending credential offers keyed by their

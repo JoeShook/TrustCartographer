@@ -1,7 +1,7 @@
 using TrustCartographer.Core.Models;
 using TrustCartographer.Core.Services;
 
-namespace TrustCartographer.Issuer.Services;
+namespace TrustCartographer.Issuing;
 
 /// <summary>
 /// Holds the Issuer's Ed25519 key pair and the resulting <c>did:key</c> for the

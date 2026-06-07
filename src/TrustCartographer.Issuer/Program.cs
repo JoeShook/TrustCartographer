@@ -2,8 +2,7 @@ using Microsoft.FluentUI.AspNetCore.Components;
 using TrustCartographer.Core.Oid4Vci;
 using TrustCartographer.Core.Services;
 using TrustCartographer.Issuer.Components;
-using TrustCartographer.Issuer.Endpoints;
-using TrustCartographer.Issuer.Services;
+using TrustCartographer.Issuing;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();

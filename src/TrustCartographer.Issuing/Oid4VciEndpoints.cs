@@ -1,10 +1,12 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using TrustCartographer.Core.Oid4Vci;
 using TrustCartographer.Core.SdJwt;
 using TrustCartographer.Core.Services;
-using TrustCartographer.Issuer.Services;
 
-namespace TrustCartographer.Issuer.Endpoints;
+namespace TrustCartographer.Issuing;
 
 /// <summary>
 /// Maps the OID4VCI 1.0 endpoints onto the Issuer's pipeline. Each handler is

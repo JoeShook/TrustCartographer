@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Issuance kit: OID4VCI + SD-JWT issuance mechanics shared by every issuer app
+       (payer / provider / CSP / the trust-triangle issuer). Pure backend; an SDK seed.
+       FrameworkReference gives access to ASP.NET endpoint types without being a web app. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TrustCartographer.Core\TrustCartographer.Core.csproj" />
+  </ItemGroup>
+
+</Project>

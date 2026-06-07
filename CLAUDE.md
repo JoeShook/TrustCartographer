@@ -8,6 +8,15 @@ A comparative understanding of **SSI vs Google A2A vs UDAP** that makes the case
 UDAP's strengths in agent-to-agent / cross-org auth. The build is the teaching vehicle:
 issue → hold → present → verify a real credential, then contrast trust models.
 
+## North star: a reusable C# DIF/VC SDK
+The ultimate goal is a **solid, reusable C# SDK** for DIDs / VCs / SD-JWT / OID4VC (the DIF/VC
+analog of the UDAP SDK + UdapEd). The apps exist to **discover and validate the API surface**;
+the **libraries are the SDK, the apps are samples**. Keep all protocol/crypto logic in pure,
+dependency-light libraries — `Core` (`SdJwt`, `Oid4Vci`, `Oid4Vp`, `Proofing`) and the kits
+(`TrustCartographer.Issuing` = OID4VCI/SD-JWT issuance mechanics; `TrustCartographer.Wallet`
+coming) — with no UI/transport coupling (use resolver/suite/clock/RNG seams). If an app needs
+logic the SDK lacks, add it to the SDK, not the app.
+
 ## Who I'm working with
 Joe Shook — built the UDAP.org SDKs, reference implementations, and visualizers. Deep in
 trust frameworks, authorization chains, cross-org trust (X.509, FHIR). **Assume expert

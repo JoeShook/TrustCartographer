@@ -1,7 +1,7 @@
 using TrustCartographer.Core.Oid4Vci;
 using TrustCartographer.Core.SdJwt;
 
-namespace TrustCartographer.Issuer.Services;
+namespace TrustCartographer.Issuing;
 
 /// <summary>
 /// The set of credentials this Issuer is willing to mint. Drives both the

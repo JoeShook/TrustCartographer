@@ -16,7 +16,8 @@ public partial class LiveFlow : ComponentBase, IDisposable
     private string? errorMessage;
 
     // ── Animated sequence diagram state (mirrors PractitionerLicense) ──
-    private readonly IReadOnlyList<SsiActor> actors = new[]
+    // The trust-triangle (issuance/verification/full-demo) actor set.
+    private static readonly IReadOnlyList<SsiActor> DefaultActors = new[]
     {
         new SsiActor
         {
@@ -40,6 +41,34 @@ public partial class LiveFlow : ComponentBase, IDisposable
             Tooltip = "OID4VP verifier. Requests a presentation and verifies it: holder proof + issuer signature (resolved from the issuer's did:key)."
         },
     };
+
+    // Portable Identity Assurance (minor age-check) actor set — the guardian's wallet
+    // holds the minor's SD-JWT credential.
+    private static readonly IReadOnlyList<SsiActor> MinorActors = new[]
+    {
+        new SsiActor
+        {
+            Key = "browser", Label = "Browser", Sublabel = "demo trigger",
+            Tooltip = "This Live Flow page, acting as the operator that kicks off the flow."
+        },
+        new SsiActor
+        {
+            Key = "issuer", Label = "Health Identity Issuer", Sublabel = "Issuer (payer / state)",
+            Tooltip = "Issues the minor's SD-JWT VC via OID4VCI, binding the guardian wallet key via cnf."
+        },
+        new SsiActor
+        {
+            Key = "holder", Label = "Guardian Wallet", Sublabel = "Holder (minor's VC)",
+            Tooltip = "The guardian's wallet holds the minor's credential and presents only the requested claim (age_over_18)."
+        },
+        new SsiActor
+        {
+            Key = "verifier", Label = "Urgent Care", Sublabel = "Verifier",
+            Tooltip = "Only needs to know whether the patient is over 18 — not their name or date of birth."
+        },
+    };
+
+    private IReadOnlyList<SsiActor> actors = DefaultActors;
 
     private List<SsiStep> steps = new();
     private List<string> stepExplanations = new();
@@ -71,17 +100,17 @@ public partial class LiveFlow : ComponentBase, IDisposable
     // ───────────────────────── Triggers ─────────────────────────
 
     private Task TriggerIssuanceAsync() =>
-        RunAsync("CREDENTIAL ISSUED", "ISSUANCE FAILED", async http =>
+        RunAsync("CREDENTIAL ISSUED", "ISSUANCE FAILED", DefaultActors, async http =>
         {
             await MintAndRedeemAsync(http);
             return null; // HTTP-2xx success is sufficient for issuance.
         });
 
     private Task TriggerVerificationAsync() =>
-        RunAsync("VERIFIED", "REJECTED", async http => await RequestAndPresentAsync(http));
+        RunAsync("VERIFIED", "REJECTED", DefaultActors, async http => await RequestAndPresentAsync(http));
 
     private Task RunFullDemoAsync() =>
-        RunAsync("VERIFIED", "REJECTED", async http =>
+        RunAsync("VERIFIED", "REJECTED", DefaultActors, async http =>
         {
             await MintAndRedeemAsync(http);
             return await RequestAndPresentAsync(http);
@@ -90,7 +119,7 @@ public partial class LiveFlow : ComponentBase, IDisposable
     // Portable Identity Assurance: issue a real SD-JWT minor-identity credential, then
     // present ONLY age_over_18 (selective disclosure) to the verifier — all over the proxy.
     private Task RunMinorAgeCheckAsync() =>
-        RunAsync("AGE CLAIM VERIFIED", "REJECTED", async http =>
+        RunAsync("AGE CLAIM VERIFIED", "REJECTED", MinorActors, async http =>
         {
             var offerResp = await http.PostAsJsonAsync("issuer/credential-offer",
                 new { credentialConfigurationId = "MinorIdentityCredential" });
@@ -125,6 +154,7 @@ public partial class LiveFlow : ComponentBase, IDisposable
     /// </summary>
     private async Task RunAsync(
         string okLabel, string badLabel,
+        IReadOnlyList<SsiActor> actorSet,
         Func<HttpClient, Task<(bool ok, string? reason)?>> flow)
     {
         if (isRunning || isPlaying) return;
@@ -132,6 +162,7 @@ public partial class LiveFlow : ComponentBase, IDisposable
         errorMessage = null;
         successLabel = okLabel;
         failLabel = badLabel;
+        actors = actorSet;
 
         // Fresh capture + clean diagram so the animation reflects exactly this run.
         TrafficLog.Clear();

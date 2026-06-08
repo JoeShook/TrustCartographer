@@ -1,0 +1,17 @@
+@inherits LayoutComponentBase
+
+<AppShell BrandText="Minor's Wallet" BrandSublabel="Holder — self-custody (post-transfer)">
+    <NavLinks>
+        <FluentNavLink Href="" Match="NavLinkMatch.All"
+                       Icon="@(new RegularIcons.Size20.Home())">
+            Overview
+        </FluentNavLink>
+        <FluentNavLink Href="wallet"
+                       Icon="@(new RegularIcons.Size20.Wallet())">
+            Wallet
+        </FluentNavLink>
+    </NavLinks>
+    <Body>
+        @Body
+    </Body>
+</AppShell>

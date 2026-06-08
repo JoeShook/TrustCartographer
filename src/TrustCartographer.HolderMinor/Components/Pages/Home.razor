@@ -1,0 +1,36 @@
+@page "/"
+@inject HolderKeyMaterial Keys
+@inject WalletStore Store
+
+<PageTitle>Minor's Wallet</PageTitle>
+
+<h1>Minor's Wallet</h1>
+<p class="muted">
+    The minor's <strong>own</strong> wallet. It holds credentials that have been
+    <strong>custody-transferred</strong> from the guardian: the original issuer re-issued the
+    claims (assurance carried forward) bound by <code>cnf</code> to <em>this</em> wallet's key,
+    so the minor — not the guardian — now controls them.
+</p>
+
+<FluentCard Style="margin-bottom: 1rem;">
+    <h3>Wallet Identity</h3>
+    <FluentLabel Typo="Typography.Body">DID</FluentLabel>
+    <pre class="codeblock">@Keys.Did</pre>
+    <FluentLabel Typo="Typography.Body">Ed25519 public key (hex)</FluentLabel>
+    <pre class="codeblock">@PublicKeyHex</pre>
+</FluentCard>
+
+<FluentCard>
+    <h3>Status</h3>
+    <p>
+        <strong>@Store.All().Count</strong> credential(s) held. <a href="wallet">View wallet</a>.
+    </p>
+    <p class="muted">
+        To populate this wallet, open the <a href="../holder/wallet" target="_blank">Guardian wallet</a>
+        and use <em>Transfer custody to minor</em> on a Minor Identity credential.
+    </p>
+</FluentCard>
+
+@code {
+    private string PublicKeyHex => Convert.ToHexString(Keys.KeyPair.PublicKey).ToLowerInvariant();
+}

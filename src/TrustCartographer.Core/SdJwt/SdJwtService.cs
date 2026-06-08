@@ -141,6 +141,24 @@ public sealed class SdJwtService
         return (issuerJwt, list);
     }
 
+    /// <summary>
+    /// Decode a stored combined SD-JWT (<c>jwt~d1~…~</c>) into a full <see cref="IssuedSdJwt"/>
+    /// — issuer header/payload JSON plus decoded disclosures — for display. Signature is not
+    /// verified here; this is a viewer aid (use <see cref="Verify"/> for trust decisions).
+    /// </summary>
+    public IssuedSdJwt Decode(string combined)
+    {
+        var (issuerJwt, disclosures) = ParseIssued(combined);
+        var parts = issuerJwt.Split('.');
+        string headerJson = "{}", payloadJson = "{}";
+        if (parts.Length == 3)
+        {
+            try { headerJson = JsonNode.Parse(Base64Url.DecodeToString(parts[0]))?.ToJsonString(Pretty) ?? "{}"; } catch { /* leave default */ }
+            try { payloadJson = JsonNode.Parse(Base64Url.DecodeToString(parts[1]))?.ToJsonString(Pretty) ?? "{}"; } catch { /* leave default */ }
+        }
+        return new IssuedSdJwt(issuerJwt, disclosures, combined, headerJson, payloadJson);
+    }
+
     // ───────────────────────── Present ─────────────────────────
 
     /// <summary>
@@ -325,6 +343,9 @@ public sealed class SdJwtService
     {
         null => null,
         JsonNode node => node.DeepClone(),
+        // Claims arriving over the wire (e.g. a custody re-issuance request) deserialize as
+        // JsonElement; preserve their real JSON type rather than stringifying them.
+        JsonElement je => je.ValueKind == JsonValueKind.Null ? null : JsonNode.Parse(je.GetRawText()),
         string s => JsonValue.Create(s),
         bool b => JsonValue.Create(b),
         int i => JsonValue.Create(i),

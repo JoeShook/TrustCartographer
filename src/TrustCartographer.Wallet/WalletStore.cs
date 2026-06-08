@@ -23,6 +23,8 @@ public sealed class WalletStore
     }
 
     public IReadOnlyCollection<StoredCredential> All() => _credentials.Values.ToArray();
+
+    public StoredCredential? Get(string id) => _credentials.TryGetValue(id, out var c) ? c : null;
 }
 
 public record StoredCredential(

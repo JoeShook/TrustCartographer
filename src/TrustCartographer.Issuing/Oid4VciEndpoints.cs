@@ -82,8 +82,10 @@ public static class Oid4VciEndpoints
             // Optional assurance enrichment: if this host registered an IAssuranceSource,
             // it decides whether issuance may proceed and contributes assurance claims that
             // travel inside the credential. Absent a source, behaviour is unchanged.
+            // A custody re-issuance carries the original assurance forward in the supplied
+            // claims, so it explicitly opts out of re-deriving assurance here.
             var assuranceSource = ctx.RequestServices.GetService<IAssuranceSource>();
-            if (assuranceSource is not null)
+            if (assuranceSource is not null && body?.PreserveProvidedAssurance != true)
             {
                 var resolution = await assuranceSource.ResolveAsync(
                     new AssuranceResolutionContext(configId, body?.ProofingEventId, ProxyOrigin(ctx)),
@@ -336,7 +338,8 @@ public static class Oid4VciEndpoints
 public record CreateOfferRequest(
     string? CredentialConfigurationId,
     IReadOnlyDictionary<string, object?>? SubjectClaims,
-    string? ProofingEventId = null);
+    string? ProofingEventId = null,
+    bool PreserveProvidedAssurance = false);
 
 public record CreateOfferResponse(
     CredentialOffer Offer,

@@ -12,6 +12,7 @@
     <Project Path="src/TrustCartographer.CspIssuer/TrustCartographer.CspIssuer.csproj" />
     <Project Path="src/TrustCartographer.Issuer/TrustCartographer.Issuer.csproj" />
     <Project Path="src/TrustCartographer.Holder/TrustCartographer.Holder.csproj" />
+    <Project Path="src/TrustCartographer.HolderMinor/TrustCartographer.HolderMinor.csproj" />
     <Project Path="src/TrustCartographer.Verifier/TrustCartographer.Verifier.csproj" />
     <Project Path="src/TrustCartographer.AppHost/TrustCartographer.AppHost.csproj" />
   </Folder>

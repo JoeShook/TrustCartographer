@@ -1,13 +1,18 @@
 @page "/wallet"
 @using TrustCartographer.UI.Shared
+@using TrustCartographer.Core.SdJwt
 @inject WalletStore Store
+@inject IHttpClientFactory HttpFactory
+@inject NavigationManager Nav
 
 <PageTitle>Wallet — Credentials</PageTitle>
 
 <h1>Held Credentials</h1>
 <p class="muted">
     Every credential the wallet has accepted from any Issuer. Click a row to
-    decode the JWT-VC header + payload.
+    decode it. Minor Identity credentials (SD-JWT) can be <strong>custody-transferred</strong>
+    to the minor's own wallet — the issuer re-issues the claims (assurance carried forward),
+    key-bound to the minor instead of this guardian wallet.
 </p>
 
 @if (Store.All().Count == 0)
@@ -21,21 +26,45 @@ else
     @foreach (var cred in Store.All().OrderByDescending(c => c.ReceivedAt))
     {
         var open = openIds.Contains(cred.Id);
+        var isSdJwt = cred.Jwt.Contains(SdJwtConstants.Delimiter);
         <FluentCard Style="margin-bottom: 0.75rem;">
-            <div style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;"
-                 @onclick="() => Toggle(cred.Id)">
-                <FluentIcon Value="@(open ? (Icon)new RegularIcons.Size20.ChevronDown() : new RegularIcons.Size20.ChevronRight())" />
-                <div style="flex: 1;">
-                    <strong>@cred.CredentialConfigurationId</strong>
-                    <div class="muted" style="font-size: 0.9em;">
-                        From @cred.CredentialIssuer · received @cred.ReceivedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; flex: 1;"
+                     @onclick="() => Toggle(cred.Id)">
+                    <FluentIcon Value="@(open ? (Icon)new RegularIcons.Size20.ChevronDown() : new RegularIcons.Size20.ChevronRight())" />
+                    <div style="flex: 1;">
+                        <strong>@cred.CredentialConfigurationId</strong>
+                        <div class="muted" style="font-size: 0.9em;">
+                            From @cred.CredentialIssuer · received @cred.ReceivedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
+                        </div>
                     </div>
                 </div>
+                @if (isSdJwt)
+                {
+                    <FluentButton Appearance="Appearance.Accent"
+                                  Disabled="@(transferringId == cred.Id)"
+                                  OnClick="@(() => TransferAsync(cred.Id))">
+                        @(transferringId == cred.Id ? "Transferring…" : "Transfer custody to minor")
+                    </FluentButton>
+                }
             </div>
+
+            @if (transferStatus.TryGetValue(cred.Id, out var status))
+            {
+                <div class="muted" style="margin-top: 0.5rem; font-size: 0.9em;">@status</div>
+            }
+
             @if (open)
             {
                 <div style="margin-top: 0.75rem;">
-                    <JwtViewer Jwt="@cred.Jwt" />
+                    @if (isSdJwt)
+                    {
+                        <SdJwtViewer Credential="@SdJwt.Decode(cred.Jwt)" />
+                    }
+                    else
+                    {
+                        <JwtViewer Jwt="@cred.Jwt" />
+                    }
                 </div>
             }
         </FluentCard>
@@ -43,9 +72,60 @@ else
 }
 
 @code {
+    [Inject] private SdJwtService SdJwt { get; set; } = default!;
+
     private readonly HashSet<string> openIds = new();
+    private readonly Dictionary<string, string> transferStatus = new();
+    private string? transferringId;
+
     private void Toggle(string id)
     {
         if (!openIds.Add(id)) openIds.Remove(id);
+    }
+
+    private async Task TransferAsync(string credentialId)
+    {
+        transferringId = credentialId;
+        transferStatus[credentialId] = "Re-issuing to the minor's wallet…";
+        try
+        {
+            var minorRedeemUrl = $"{ProxyRootFromBase(Nav.BaseUri)}holder-minor/wallet/redeem-offer";
+
+            var http = HttpFactory.CreateClient("loopback");
+            http.BaseAddress = new Uri(Nav.BaseUri); // this guardian app's proxied root (…/holder/)
+            var resp = await http.PostAsJsonAsync("wallet/transfer-custody", new
+            {
+                credentialId,
+                minorRedeemUrl
+            });
+
+            if (!resp.IsSuccessStatusCode)
+            {
+                transferStatus[credentialId] = $"Transfer failed: {(int)resp.StatusCode} {await resp.Content.ReadAsStringAsync()}";
+                return;
+            }
+
+            var result = await resp.Content.ReadFromJsonAsync<CustodyTransferResult>();
+            transferStatus[credentialId] =
+                $"✅ Custody transferred. Minor wallet now holds it (new id {result?.MinorCredentialId?[..8]}…, " +
+                $"{result?.TransferredClaimCount} claims). See the Minor's Wallet at /holder-minor/wallet.";
+        }
+        catch (Exception ex)
+        {
+            transferStatus[credentialId] = $"Transfer failed: {ex.Message}";
+        }
+        finally
+        {
+            transferringId = null;
+        }
+    }
+
+    private static string ProxyRootFromBase(string baseUri)
+    {
+        var uri = new Uri(baseUri);
+        var trimmed = uri.AbsolutePath.TrimEnd('/');
+        var slash = trimmed.LastIndexOf('/');
+        var parent = slash > 0 ? trimmed[..slash] : "";
+        return $"{uri.Scheme}://{uri.Authority}{parent}/";
     }
 }

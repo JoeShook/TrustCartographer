@@ -10,6 +10,7 @@ var cspIssuer       = builder.AddProject<Projects.TrustCartographer_CspIssuer>("
     .WaitFor(identityCsp);
 var issuer          = builder.AddProject<Projects.TrustCartographer_Issuer>("issuer", launchProfileName: "https");
 var holder          = builder.AddProject<Projects.TrustCartographer_Holder>("holder", launchProfileName: "https");
+var holderMinor     = builder.AddProject<Projects.TrustCartographer_HolderMinor>("holder-minor", launchProfileName: "https");
 var verifier        = builder.AddProject<Projects.TrustCartographer_Verifier>("verifier", launchProfileName: "https");
 
 builder.AddProject<Projects.TrustCartographer_Web>("web", launchProfileName: "https")
@@ -19,6 +20,7 @@ builder.AddProject<Projects.TrustCartographer_Web>("web", launchProfileName: "ht
     .WithReference(cspIssuer)
     .WithReference(issuer)
     .WithReference(holder)
+    .WithReference(holderMinor)
     .WithReference(verifier)
     .WaitFor(identityCsp)
     .WaitFor(payerIssuer)
@@ -26,6 +28,7 @@ builder.AddProject<Projects.TrustCartographer_Web>("web", launchProfileName: "ht
     .WaitFor(cspIssuer)
     .WaitFor(issuer)
     .WaitFor(holder)
+    .WaitFor(holderMinor)
     .WaitFor(verifier);
 
 builder.Build().Run();

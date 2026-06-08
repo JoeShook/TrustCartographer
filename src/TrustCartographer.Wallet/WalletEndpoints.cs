@@ -58,6 +58,29 @@ public static class WalletEndpoints
             }
         });
 
+        // Custody transfer: re-issue a guardian-held credential to the minor's own wallet.
+        app.MapPost("/wallet/transfer-custody", async (
+            CustodyTransferRequest body,
+            CustodyClient custody,
+            CancellationToken ct) =>
+        {
+            if (string.IsNullOrWhiteSpace(body.CredentialId) || string.IsNullOrWhiteSpace(body.MinorRedeemUrl))
+                return Results.BadRequest(new { error = "credentialId and minorRedeemUrl are required." });
+            try
+            {
+                var result = await custody.TransferCustodyAsync(body.CredentialId, body.MinorRedeemUrl, ct);
+                return Results.Ok(result);
+            }
+            catch (HttpRequestException ex)
+            {
+                return Results.Json(new { error = "custody_transfer_failed", detail = ex.Message }, statusCode: 502);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.BadRequest(new { error = "custody_transfer_invalid", detail = ex.Message });
+            }
+        });
+
         app.MapGet("/wallet/credentials", (WalletStore store) => Results.Ok(store.All()));
 
         app.MapGet("/wallet/did", (HolderKeyMaterial keys) => Results.Ok(new { did = keys.Did }));

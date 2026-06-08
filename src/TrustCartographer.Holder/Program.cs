@@ -20,6 +20,8 @@ builder.Services.AddSingleton<TrustCartographer.Core.SdJwt.SdJwtService>();
 // Wallet clients use outbound HttpClients for OID4VCI (issuance) and OID4VP (presentation)
 builder.Services.AddHttpClient<WalletClient>();
 builder.Services.AddHttpClient<PresentationClient>();
+builder.Services.AddHttpClient<CustodyClient>();   // guardian → issuer re-issue → minor wallet
+builder.Services.AddHttpClient("loopback");          // UI-initiated calls back through the proxy
 
 // Blazor Server + FluentUI
 builder.Services.AddRazorComponents()

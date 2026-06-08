@@ -115,10 +115,12 @@ public sealed class TrafficLoggingMiddleware
     private static string? InferServiceName(string? destinationAddress)
     {
         if (string.IsNullOrEmpty(destinationAddress)) return null;
-        var lower = destinationAddress.ToLowerInvariant();
-        if (lower.Contains("issuer")) return "issuer";
-        if (lower.Contains("holder")) return "holder";
-        if (lower.Contains("verifier")) return "verifier";
+        // Cluster destinations are addressed by exact service name (e.g. "https://csp-issuer"),
+        // so the host IS the service name. Returning it verbatim keeps every service distinct —
+        // payer-issuer / provider-issuer / csp-issuer / holder-minor / identity-csp no longer
+        // collapse onto "issuer"/"holder", which the Live Flow lifelines depend on.
+        if (Uri.TryCreate(destinationAddress, UriKind.Absolute, out var uri) && !string.IsNullOrEmpty(uri.Host))
+            return uri.Host.ToLowerInvariant();
         return null;
     }
 }

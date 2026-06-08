@@ -38,11 +38,12 @@ pathways, custody lifecycle, verification, and governance layer on top.
 | Workflow | Tier | Guide | Status |
 |---|---|---|---|
 | Minor Age Check — SD-JWT selective disclosure | Foundation / Tier 3 format | [minor-age-sd-jwt.md](minor-age-sd-jwt.md) | ✅ Live (`/pia/minor-age-check`) |
-| Delegated proofing + assurance levels | Tier 1–2 | — | Planned |
-| Issuance Pathway A — payer enrollment | Tier 1–2 | — | Planned |
-| Issuance Pathway B — provider in-person | Tier 1–2 | — | Planned |
-| Issuance Pathway C — IAL2 CSP (Login.gov) | Tier 1–2 | — | Planned |
-| Guardian → minor custody transfer | Custody | — | Planned |
+| Delegated proofing + assurance levels | Tier 1–2 | [pathways-and-custody.md](pathways-and-custody.md) | ✅ Live (`/identity-csp`) |
+| Issuance Pathway A — payer enrollment | Tier 1–2 | [pathways-and-custody.md](pathways-and-custody.md) | ✅ Live (`/payer-issuer`) |
+| Issuance Pathway B — provider in-person | Tier 1–2 | [pathways-and-custody.md](pathways-and-custody.md) | ✅ Live (`/provider-issuer`) |
+| Issuance Pathway C — IAL2 CSP (Login.gov) | Tier 1–2 | [pathways-and-custody.md](pathways-and-custody.md) | ✅ Live (`/csp-issuer`) |
+| Guardian → minor custody transfer | Custody | [pathways-and-custody.md](pathways-and-custody.md) | ✅ Live (`/holder` → `/holder-minor`) |
+| Full flow animated (CSP-backed) | Tier 1–3 | [pathways-and-custody.md](pathways-and-custody.md) | ✅ Live (`/live-flow`) |
 | Verification & trust decision → OIDC token | Tier 3 | — | Planned |
 | Governance / issuer trust list | Tier 4 | — | Planned |
 

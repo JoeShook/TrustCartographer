@@ -68,7 +68,43 @@ public partial class LiveFlow : ComponentBase, IDisposable
         },
     };
 
+    // Portable Identity Assurance full-flow actor set: the delegated-proofing CSP and the
+    // pathway issuer are distinct lifelines, so the CSP's role in issuance is visible.
+    private static readonly IReadOnlyList<SsiActor> PiaActors = new[]
+    {
+        new SsiActor
+        {
+            Key = "browser", Label = "Browser", Sublabel = "demo trigger",
+            Tooltip = "This Live Flow page, acting as the operator that kicks off the flow."
+        },
+        new SsiActor
+        {
+            Key = "csp", Label = "Identity CSP", Sublabel = "delegated proofing",
+            Tooltip = "Credential Service Provider. Proofs the responsible adult (delegate) and maps it to a FAST IDIAL; "
+                    + "the issuer consults the resulting proofing event so the assurance basis travels in the credential."
+        },
+        new SsiActor
+        {
+            Key = "issuer", Label = "IAL2 CSP Issuer", Sublabel = "Pathway C issuer",
+            Tooltip = "OID4VCI issuer for the Minor Identity SD-JWT VC. Consults the Identity-CSP at offer time and embeds "
+                    + "the CSP-derived effective IDIAL (+ proofing_event_id) into the credential."
+        },
+        new SsiActor
+        {
+            Key = "guardian", Label = "Guardian Wallet", Sublabel = "Holder (minor's VC)",
+            Tooltip = "The guardian's wallet holds the minor's credential and presents only the requested claim (age_over_18)."
+        },
+        new SsiActor
+        {
+            Key = "verifier", Label = "Urgent Care", Sublabel = "Verifier",
+            Tooltip = "Only needs to know whether the patient is over 18 — not their name or date of birth."
+        },
+    };
+
     private IReadOnlyList<SsiActor> actors = DefaultActors;
+
+    // Which classifier maps captured hops → diagram steps for the current run.
+    private Func<TrafficEntry, HopInfo> hopClassifier = Classify;
 
     private List<SsiStep> steps = new();
     private List<string> stepExplanations = new();
@@ -100,26 +136,69 @@ public partial class LiveFlow : ComponentBase, IDisposable
     // ───────────────────────── Triggers ─────────────────────────
 
     private Task TriggerIssuanceAsync() =>
-        RunAsync("CREDENTIAL ISSUED", "ISSUANCE FAILED", DefaultActors, async http =>
+        RunAsync("CREDENTIAL ISSUED", "ISSUANCE FAILED", DefaultActors, Classify, async http =>
         {
             await MintAndRedeemAsync(http);
             return null; // HTTP-2xx success is sufficient for issuance.
         });
 
     private Task TriggerVerificationAsync() =>
-        RunAsync("VERIFIED", "REJECTED", DefaultActors, async http => await RequestAndPresentAsync(http));
+        RunAsync("VERIFIED", "REJECTED", DefaultActors, Classify, async http => await RequestAndPresentAsync(http));
 
     private Task RunFullDemoAsync() =>
-        RunAsync("VERIFIED", "REJECTED", DefaultActors, async http =>
+        RunAsync("VERIFIED", "REJECTED", DefaultActors, Classify, async http =>
         {
             await MintAndRedeemAsync(http);
             return await RequestAndPresentAsync(http);
         });
 
+    // Portable Identity Assurance, end to end through the real apps: a delegated proofing event
+    // on the Identity-CSP → CSP-issuer mints the Minor Identity SD-JWT (consulting the CSP) →
+    // guardian wallet redeems it (OID4VCI) → guardian presents ONLY age_over_18 (OID4VP).
+    // The CSP appears as its own lifeline, including the issuer's mid-issuance consult hop.
+    private Task RunPiaFullAsync() =>
+        RunAsync("AGE CLAIM VERIFIED", "REJECTED", PiaActors, ClassifyPia, async http =>
+        {
+            // 1. Delegated proofing on the CSP → a proofing event id.
+            var proofResp = await http.PostAsJsonAsync("identity-csp/proofing-event",
+                new { method = "login.gov-ial2" });
+            proofResp.EnsureSuccessStatusCode();
+            using var proofDoc = JsonDocument.Parse(await proofResp.Content.ReadAsStringAsync());
+            var proofingEventId = proofDoc.RootElement.GetProperty("id").GetString()
+                ?? throw new InvalidOperationException("CSP did not return a proofing event id.");
+
+            // 2. CSP-issuer mints an offer referencing that event (it consults the CSP mid-call).
+            var offerResp = await http.PostAsJsonAsync("csp-issuer/credential-offer",
+                new { credentialConfigurationId = "MinorIdentityCredential", proofingEventId });
+            offerResp.EnsureSuccessStatusCode();
+            using var offerDoc = JsonDocument.Parse(await offerResp.Content.ReadAsStringAsync());
+            var offerUri = offerDoc.RootElement.GetProperty("offerUri").GetString()
+                ?? throw new InvalidOperationException("CSP-issuer did not return offerUri.");
+
+            // 3. Guardian wallet redeems the offer (runs the OID4VCI dance with the CSP-issuer).
+            var redeemResp = await http.PostAsJsonAsync("holder/wallet/redeem-offer", new { offerUri });
+            redeemResp.EnsureSuccessStatusCode();
+
+            // 4. Verifier asks for ONLY age_over_18; the guardian presents it selectively.
+            var reqResp = await http.PostAsJsonAsync("verifier/presentation-request",
+                new { credentialType = "MinorIdentityCredential", requiredClaims = new[] { "age_over_18" }, format = "vc+sd-jwt" });
+            reqResp.EnsureSuccessStatusCode();
+            using var reqDoc = JsonDocument.Parse(await reqResp.Content.ReadAsStringAsync());
+            var requestUri = reqDoc.RootElement.GetProperty("requestUri").GetString()
+                ?? throw new InvalidOperationException("Verifier did not return requestUri.");
+
+            var presentResp = await http.PostAsJsonAsync("holder/wallet/present", new { requestUri });
+            presentResp.EnsureSuccessStatusCode();
+            using var pDoc = JsonDocument.Parse(await presentResp.Content.ReadAsStringAsync());
+            var status = pDoc.RootElement.TryGetProperty("status", out var s) ? s.GetString() : null;
+            var reason = pDoc.RootElement.TryGetProperty("reason", out var r) ? r.GetString() : null;
+            return (status == "accepted", reason);
+        });
+
     // Portable Identity Assurance: issue a real SD-JWT minor-identity credential, then
     // present ONLY age_over_18 (selective disclosure) to the verifier — all over the proxy.
     private Task RunMinorAgeCheckAsync() =>
-        RunAsync("AGE CLAIM VERIFIED", "REJECTED", MinorActors, async http =>
+        RunAsync("AGE CLAIM VERIFIED", "REJECTED", MinorActors, Classify, async http =>
         {
             var offerResp = await http.PostAsJsonAsync("issuer/credential-offer",
                 new { credentialConfigurationId = "MinorIdentityCredential" });
@@ -155,6 +234,7 @@ public partial class LiveFlow : ComponentBase, IDisposable
     private async Task RunAsync(
         string okLabel, string badLabel,
         IReadOnlyList<SsiActor> actorSet,
+        Func<TrafficEntry, HopInfo> classifier,
         Func<HttpClient, Task<(bool ok, string? reason)?>> flow)
     {
         if (isRunning || isPlaying) return;
@@ -163,6 +243,7 @@ public partial class LiveFlow : ComponentBase, IDisposable
         successLabel = okLabel;
         failLabel = badLabel;
         actors = actorSet;
+        hopClassifier = classifier;
 
         // Fresh capture + clean diagram so the animation reflects exactly this run.
         TrafficLog.Clear();
@@ -246,7 +327,7 @@ public partial class LiveFlow : ComponentBase, IDisposable
         var captured = TrafficLog.Snapshot();
 
         var ordered = captured
-            .Select((entry, i) => (entry, hop: Classify(entry), i))
+            .Select((entry, i) => (entry, hop: hopClassifier(entry), i))
             .OrderBy(x => x.hop.Rank).ThenBy(x => x.i)
             .ToList();
 
@@ -330,6 +411,71 @@ public partial class LiveFlow : ComponentBase, IDisposable
 
         var to = e.To is "issuer" or "holder" or "verifier" ? e.To : "issuer";
         return new("browser", to, $"{e.Method} {e.Path}", "Captured exchange.", 99);
+    }
+
+    // Classifier for the full Portable Identity Assurance flow. Actor keys:
+    // browser · csp · issuer (CSP-issuer) · guardian (holder wallet) · verifier.
+    // Paths are unique per hop in this flow, so a path-based map ranks cleanly.
+    private static HopInfo ClassifyPia(TrafficEntry e)
+    {
+        bool Has(string s) => e.Path.Contains(s, StringComparison.OrdinalIgnoreCase);
+
+        // ── Delegated proofing + CSP-backed issuance ──
+        if (Has("/proofing-event/")) // GET {id} — the issuer consulting the CSP mid-issuance
+            return new("issuer", "csp", "Consult proofing event",
+                "While building the offer, the <strong>CSP-issuer</strong> calls back to the <strong>Identity-CSP</strong> " +
+                "to read the delegated-proofing event. It honours the issuable/floor decision and embeds the CSP-derived " +
+                "effective IDIAL (and <code>proofing_event_id</code>) into the credential.", 2);
+        if (Has("/proofing-event"))
+            return new("browser", "csp", "Run delegated proofing → IDIAL",
+                "The operator runs a <strong>delegated proofing</strong> on the <strong>Identity-CSP</strong> " +
+                "(a responsible adult is proofed; e.g. Login.gov IAL2). The CSP records a proofing event and returns its id.", 0);
+        if (Has("/credential-offer"))
+            return new("browser", "issuer", "Mint Minor Identity offer (CSP-backed)",
+                "The operator asks the <strong>CSP-issuer</strong> for a Minor Identity SD-JWT offer, referencing the " +
+                "proofing-event id. The issuer will consult the CSP before returning the <code>offerUri</code>.", 1);
+        if (Has("/wallet/redeem-offer"))
+            return new("browser", "guardian", "Hand offer to guardian wallet",
+                "The operator passes the <code>offerUri</code> to the <strong>guardian wallet</strong>, which runs the full " +
+                "OID4VCI dance with the CSP-issuer — the steps that follow.", 3);
+        if (Has("openid-credential-issuer"))
+            return new("guardian", "issuer", "Fetch issuer metadata",
+                "The guardian wallet reads <code>/.well-known/openid-credential-issuer</code> to discover the credential, " +
+                "nonce, and authorization-server endpoints.", 4);
+        if (Has("oauth-authorization-server"))
+            return new("guardian", "issuer", "Fetch AS metadata",
+                "The wallet reads <code>/.well-known/oauth-authorization-server</code> to find the <code>token_endpoint</code>.", 5);
+        if (Has("/token"))
+            return new("guardian", "issuer", "Redeem pre-auth code → access token",
+                "The wallet POSTs the <code>pre-authorized_code</code> and receives a short-lived <code>access_token</code>.", 6);
+        if (Has("/nonce"))
+            return new("guardian", "issuer", "Request c_nonce for proof",
+                "The wallet requests a fresh <code>c_nonce</code> to sign — proving it controls the holder's private key.", 7);
+        if (Has("/credential"))
+            return new("guardian", "issuer", "Send PoP proof → receive SD-JWT VC",
+                "The wallet sends a proof JWT and its <code>access_token</code>; the CSP-issuer returns the signed " +
+                "<strong>Minor Identity SD-JWT VC</strong>, key-bound to the wallet (<code>cnf</code>) and carrying the " +
+                "selectively-disclosable assurance + demographic claims.", 8);
+
+        // ── Selective-disclosure presentation (OID4VP) ──
+        if (Has("/presentation-response"))
+            return new("guardian", "verifier", "Present age_over_18 (direct_post)",
+                "The guardian wallet reveals <strong>only</strong> the <code>age_over_18</code> disclosure plus a Key Binding " +
+                "JWT and POSTs the <code>vp_token</code>. The <strong>Verifier</strong> checks the holder proof, then the " +
+                "issuer signature — without ever seeing the minor's name or date of birth.", 13);
+        if (Has("/presentation-request/"))
+            return new("guardian", "verifier", "Fetch presentation request",
+                "The wallet dereferences <code>request_uri</code> to read the verifier's <code>nonce</code>, " +
+                "<code>client_id</code>, <code>response_uri</code>, and the single required claim.", 12);
+        if (Has("/wallet/present"))
+            return new("browser", "guardian", "Hand request to wallet",
+                "The operator passes the presentation <code>requestUri</code> to the guardian wallet.", 11);
+        if (Has("/presentation-request"))
+            return new("browser", "verifier", "Build presentation request (age_over_18 only)",
+                "The <strong>Verifier</strong> mints a one-time <code>nonce</code> and a request describing the single claim " +
+                "it needs — <code>age_over_18</code> — nothing more.", 10);
+
+        return new("browser", "issuer", $"{e.Method} {e.Path}", "Captured exchange.", 99);
     }
 
     private static string ComposeWireBytes(TrafficEntry e)

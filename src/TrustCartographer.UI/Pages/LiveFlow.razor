@@ -43,6 +43,12 @@
                   IconStart="@(new RegularIcons.Size16.Play())">
         Run minor age-check (SD-JWT)
     </FluentButton>
+    <FluentButton Appearance="Appearance.Accent" OnClick="RunPiaFullAsync"
+                  Disabled="@(isRunning || isPlaying)"
+                  Size="ButtonSize.Small"
+                  IconStart="@(new RegularIcons.Size16.Play())">
+        Run Portable Identity Assurance (CSP-backed)
+    </FluentButton>
     <FluentButton Appearance="Appearance.Outline" OnClick="StepForward"
                   Disabled="@(steps.Count == 0 || currentIndex >= steps.Count - 1 || isPlaying || isRunning)"
                   Size="ButtonSize.Small">

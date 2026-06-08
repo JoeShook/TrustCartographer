@@ -66,17 +66,34 @@ Surfaced on the Verifier Overview page on purpose. This is the on-ramp to:
 UDAP trust communities, and side-by-side **SSI vs Google A2A vs UDAP**.
 
 **In progress — "Portable Identity Assurance in Healthcare" program** (implements the Templeton/Cambia
-proposal; cited+linked, not copied). A grouped suite of workflows under `/pia`, built in phases.
-*Phase A1 done:* `Core/SdJwt/SdJwtService` (SD-JWT VC selective disclosure — SDK-grade), `SdJwtViewer`,
-and the live **Minor Age Check** walkthrough (`/pia/minor-age-check`, reveal `age_over_18` only + tamper
-toggles). Backlog: delegated proofing + FAST IDIAL assurance, the 3 issuance pathways, custody
-transfer, verification→OIDC token, and the Tier-4 trust list (the UDAP-comparison pivot). Deep-dives in
-`docs/use-cases/portable-identity-assurance/`.
+proposal; cited+linked, not copied). A grouped suite of workflows under `/pia`, built as a **real
+multi-app topology** (8 services) so the Live Flow captures genuine cross-org traffic.
+*Done (A1, B0–B4):*
+- `Core/SdJwt/SdJwtService` (SD-JWT VC selective disclosure — SDK-grade) + `SdJwtViewer`; live **Minor
+  Age Check** sim (`/pia/minor-age-check`).
+- **Shared kits (the SDK seed):** `TrustCartographer.Issuing` (OID4VCI + SD-JWT issuance: `Oid4VciEndpoints`,
+  `CredentialCatalog`, `IssuerProfile`, `IAssuranceSource` seam) and `TrustCartographer.Wallet`
+  (`WalletClient`, `PresentationClient`, `CustodyClient`). Apps are thin samples over these.
+- **`Core/Proofing`** — FAST IDIAL + `DelegationPolicy` (ceiling/discount/floor).
+- **Five new apps:** `identity-csp` (delegated proofing → IDIAL), `payer-issuer`/`provider-issuer`/`csp-issuer`
+  (3 issuance pathways A/B/C; C consults the CSP and embeds the derived IDIAL + `proofing_event_id`),
+  and `holder-minor` (the minor's own wallet). Assurance basis travels *inside* the SD-JWT as
+  selectively-disclosable claims.
+- **Custody transfer:** guardian→minor re-issuance (`CustodyClient` / `/holder/wallet/transfer-custody`),
+  assurance preserved (`CreateOfferRequest.PreserveProvidedAssurance`), re-bound to the minor's `cnf`.
+- **Live Flow** has a **Run Portable Identity Assurance (CSP-backed)** trigger (CSP·issuer·guardian·verifier
+  lifelines); proxy `InferServiceName` now returns the exact host so every service is a distinct lifeline.
+  `/pia` hub + a **Services** nav group link all 8 apps.
+
+Backlog: verification→OIDC token, and the Tier-4 trust list (the UDAP-comparison pivot); then **B5 — SDK
+consolidation** (`TrustCartographer.Sdk` + tests + sample). Deep-dives in
+`docs/use-cases/portable-identity-assurance/` (`pathways-and-custody.md`).
 
 ## Running it
 `dotnet run --project src/TrustCartographer.AppHost`
-- Entry/proxy: `https://localhost:7257` → `/`, `/issuer/`, `/holder/`, `/verifier/`,
-  `/live-flow`, `/practitioner-license`, `/pia` (Portable Identity Assurance hub).
+- Entry/proxy: `https://localhost:7257` → `/`, `/live-flow`, `/practitioner-license`, `/pia`
+  (PIA hub), and the 8 service UIs: `/issuer/ /holder/ /verifier/` (trust triangle) +
+  `/identity-csp/ /payer-issuer/ /provider-issuer/ /csp-issuer/ /holder-minor/` (PIA).
 - Aspire dashboard: `https://localhost:17051` — login URL with `?t=<token>` printed each launch.
 
 **Gotchas (caused real pain — heed them):**

@@ -33,6 +33,28 @@
     </p>
 </FluentCard>
 
+<FluentCard Style="margin-bottom: 1rem;">
+    <h3>Runnable services (the real multi-party topology)</h3>
+    <p class="muted">
+        Each paper actor is its own running app behind the proxy, so the
+        <a href="/live-flow">Live Flow</a> captures genuine cross-service traffic. Open any service:
+    </p>
+    <ul class="pia-services">
+        <li><a href="/identity-csp/" target="_blank">Identity-CSP</a> — delegated proofing → FAST IDIAL</li>
+        <li><a href="/payer-issuer/" target="_blank">Payer-Issuer</a> — Pathway A (enrollment)</li>
+        <li><a href="/provider-issuer/" target="_blank">Provider-Issuer</a> — Pathway B (in-person)</li>
+        <li><a href="/csp-issuer/" target="_blank">CSP-Issuer</a> — Pathway C (consults the Identity-CSP)</li>
+        <li><a href="/holder/" target="_blank">Guardian Wallet</a> — holds the minor's VC; can transfer custody</li>
+        <li><a href="/holder-minor/" target="_blank">Minor's Wallet</a> — receives custody via re-issuance</li>
+        <li><a href="/verifier/" target="_blank">Verifier</a> — OID4VP / SD-JWT relying party</li>
+    </ul>
+    <p class="muted">
+        See it animate end to end on <a href="/live-flow">Live Flow</a> →
+        <strong>Run Portable Identity Assurance (CSP-backed)</strong>: delegated proofing → CSP-backed
+        issuance → guardian holds → presents only <code>age_over_18</code>.
+    </p>
+</FluentCard>
+
 <FluentCard>
     <h3>Workflows</h3>
     <table class="pia-workflows">
@@ -45,11 +67,12 @@
                 <td>Foundation (Tier 3 format)</td>
                 <td><span class="badge live">live</span></td>
             </tr>
-            <tr><td>Delegated proofing + assurance levels</td><td>Tier 1–2</td><td><span class="badge planned">planned</span></td></tr>
-            <tr><td>Issuance Pathway A — payer enrollment</td><td>Tier 1–2</td><td><span class="badge planned">planned</span></td></tr>
-            <tr><td>Issuance Pathway B — provider in-person</td><td>Tier 1–2</td><td><span class="badge planned">planned</span></td></tr>
-            <tr><td>Issuance Pathway C — IAL2 CSP (Login.gov)</td><td>Tier 1–2</td><td><span class="badge planned">planned</span></td></tr>
-            <tr><td>Guardian → minor custody transfer</td><td>Custody</td><td><span class="badge planned">planned</span></td></tr>
+            <tr><td>Delegated proofing + assurance levels (<a href="/identity-csp/proof" target="_blank">Identity-CSP</a>)</td><td>Tier 1–2</td><td><span class="badge live">live</span></td></tr>
+            <tr><td>Issuance Pathway A — payer enrollment (<a href="/payer-issuer/" target="_blank">app</a>)</td><td>Tier 1–2</td><td><span class="badge live">live</span></td></tr>
+            <tr><td>Issuance Pathway B — provider in-person (<a href="/provider-issuer/" target="_blank">app</a>)</td><td>Tier 1–2</td><td><span class="badge live">live</span></td></tr>
+            <tr><td>Issuance Pathway C — IAL2 CSP, Login.gov (<a href="/csp-issuer/" target="_blank">app</a>)</td><td>Tier 1–2</td><td><span class="badge live">live</span></td></tr>
+            <tr><td>Guardian → minor custody transfer (<a href="/holder/wallet" target="_blank">Guardian wallet</a>)</td><td>Custody</td><td><span class="badge live">live</span></td></tr>
+            <tr><td>Full flow animated (<a href="/live-flow">Live Flow</a>)</td><td>Tier 1–3</td><td><span class="badge live">live</span></td></tr>
             <tr><td>Verification &amp; trust decision → OIDC token</td><td>Tier 3</td><td><span class="badge planned">planned</span></td></tr>
             <tr><td>Governance / issuer trust list</td><td>Tier 4</td><td><span class="badge planned">planned</span></td></tr>
         </tbody>
@@ -60,6 +83,7 @@
     .page-header { margin-bottom: 0.6rem; }
     .page-subtitle { font-size: 0.85rem; opacity: 0.8; margin-top: 0.1rem; line-height: 1.55; }
     .muted { opacity: 0.7; }
+    .pia-services { font-size: 0.85rem; line-height: 1.7; margin: 0.3rem 0 0.6rem 1.1rem; }
     .pia-workflows { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
     .pia-workflows th, .pia-workflows td {
         text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid rgba(127,127,127,0.2);

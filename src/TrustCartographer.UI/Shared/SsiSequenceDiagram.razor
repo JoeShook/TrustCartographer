@@ -66,15 +66,13 @@
                     {
                         <div class="tc-seq-arrow-box" style="left: @leftPct; right: calc(100% - @rightPct);">
                             <div class="@OutcomeClass(step.Outcome) @(arrowRight ? "tc-seq-anim-slide-right" : "tc-seq-anim-slide-left")">
-                                @if (HasPayload(step))
-                                {
-                                    <div class="tc-seq-envelope-row">
-                                        <button class="tc-seq-message-btn" @onclick="@(() => TogglePayload(capturedIndex))"
-                                                title="@step.PayloadLabel">&#x1F4E8;</button>
-                                    </div>
-                                }
                                 <div class="tc-seq-arrow-label-row">
                                     <div class="tc-seq-arrow-label">@step.Label</div>
+                                    @if (HasPayload(step))
+                                    {
+                                        <button class="tc-seq-message-btn" @onclick="@(() => TogglePayload(capturedIndex))"
+                                                title="@step.PayloadLabel">&#x1F4E8;</button>
+                                    }
                                 </div>
                                 @if (!string.IsNullOrEmpty(step.HttpMethod))
                                 {

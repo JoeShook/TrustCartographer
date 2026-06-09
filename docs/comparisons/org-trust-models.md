@@ -26,7 +26,8 @@ contrasting, and how each maps onto the project. It is analysis/framing, not a r
   Communities (governance).
 - **vLEI (GLEIF)** — SSI-native, **globally-governed** org identity on a *different* stack (KERI/ACDC, not
   DIDs+JWTs). QVI chain ≈ UDAP CA/community chain; OOR/ECR ≈ Certifications & purpose-of-use. Now being pushed
-  as a multi-chain **trust anchor for digital assets** (MiCA, Chainlink, Cardano vLEI-on-chain). See
+  as a multi-chain **trust anchor for digital assets** (MiCA, Chainlink, Cardano vLEI-on-chain).
+  **Deep-dive:** [gleif-vlei.md](gleif-vlei.md). See
   <https://www.gleif.org/en/lei-solutions/featuring-the-lei/digital-assets>.
 - **CMS software statements** (Josh Mandel) — make an *existing* vetting decision **portable** via a CMS-signed
   short-lived JWT (`software_id`, `jwks_uri`, `library_status`), ingestible as an RFC 7591 `software_statement`

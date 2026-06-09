@@ -115,9 +115,21 @@ consolidation** (`TrustCartographer.Sdk` + tests + sample). Deep-dives in
 - LF→CRLF git warnings on Windows are cosmetic.
 - Security constraint: do not port any Surescripts.* code/packages/namespaces; reimplement fresh.
 
+## Phase 5 comparison foils (organizational trust)
+The comparative end goal contrasts how different ecosystems answer *who is authoritative*. Four design points,
+written up in `docs/comparisons/org-trust-models.md`:
+- **UDAP** — federated PKI trust communities (purpose-of-use, Certifications & Endorsements).
+- **vLEI (GLEIF)** — globally-governed org identity on KERI/ACDC (GLEIF→QVI→OOR/ECR); now a trust anchor for digital assets.
+- **CMS software statements** (Josh Mandel) — single-authority, RFC 7591 signed-JWT making app vetting portable;
+  *registration* trust, not authZ; the lightest concrete realization of the Tier-4 trust list.
+- **generic SSI** — what TC builds (did:key / SD-JWT / OID4VC); strong on subject identity, leaves the authoritative-party question open.
+Framing: **subject identity assurance** (PIA) + **client/software trust** (software statements) are two halves of
+the trust triangle; UDAP/vLEI carry the org trust behind both.
+
 ## More committed docs
 - `PLAN.md` — full phased plan.
 - `docs/` — Sigil/TrustCartographer relationship, PKI-vs-SSI mapping, roadmap, walkthroughs, Q&A.
+- `docs/comparisons/org-trust-models.md` — UDAP vs vLEI vs CMS software statements vs generic SSI.
 - `specs/` — curated W3C/IETF/OpenID/DIF/UDAP specs, indexed by `specs/README.md`.
 
 > Note: there is also a machine-local Claude auto-memory under

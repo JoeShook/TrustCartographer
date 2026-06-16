@@ -182,3 +182,42 @@ Steps from obtaining an LEI to establishing secure, trustworthy FHIR-based API c
   the signature + trust chain and grants the token with no manual intervention; each org hosts its own IdP
   ("true zero-trust"). Open-source Client Library, Server Library, and an example vLEI/OAuth2 healthcare
   portal expected **April 2026**.
+
+---
+
+# ViVE 2026 video — "No Identity, No Interop" (DirectTrust, ~21 min)
+
+> Summary extracted by Joe from the video transcript (<https://www.youtube.com/watch?v=9rm4QZ6jv6Y>);
+> the video is the same VITAL messaging in talk form. Speakers: **Scott Stuewe** (President & CEO,
+> DirectTrust) and **Ryan Howells** (Principal, Leavitt Partners), plus a brief CMS announcement.
+
+**Thesis — "No Identity, No Interop":** B2B exchange under TEFCA / CMS-aligned networks / upcoming FHIR APIs
+requires solving **both individual and organizational identity** plus **purpose-of-use** assertions.
+
+**Challenges:** individual identity is largely solved (ID.me, CLEAR, IAL2/AAL2); the org context (who the
+person represents) is the hard part. Type-2 NPIs identify care locations not orgs; Tax IDs are opaque;
+digital certificates rely on string names that don't disambiguate (multiple "St. Mary's" across states).
+The need: prove "who you are, what organization you represent, and why you want the data" before B2B FHIR
+(Jan 1, 2027).
+
+**Solution — GLEIF / LEI / vLEI:** ISO standard post-2008; ~50 countries, 26+ US regulations; public LEI
+registry. LEI ≈ **$50/year**, easy to obtain; gives ownership hierarchy / ultimate parent (e.g. a "St.
+Mary's" → Intermountain Healthcare). **vLEI** = cryptographically verifiable credential tying identity-
+proofed individuals (with role/context) to the org, enabling purpose-of-use assertions. Open, standards-
+based, low-cost, federates across trust frameworks.
+
+**Trust frameworks / policy:** healthcare pioneered a common **Care and Digital Identity Credentialing
+Policy** harmonizing NIST, DirectTrust, CAQH, PKI (X.509/RFC) — interoperable credentials across
+frameworks; combines with **UDAP certificates** for FHIR + IAL2 proofing. Other industries (finance) are
+interested.
+
+**Next steps / announcements:**
+- Testing at scale starting with **payer-to-payer FHIR APIs (14+ major national payers)** before broader
+  rollout; providers/others invited (contact DirectTrust / Leavitt).
+- **CMS Medicare App Library** launching **end of March 2026**; apps must adhere to the **CARIN Code of
+  Conduct** and be **certified by CARIN or DirectTrust** to be listed (ties to software-statement / app
+  vetting — see [org-trust-models.md](org-trust-models.md)).
+
+**Framing:** an **enumeration / disambiguation** strategy (not just a directory), built on proven open
+standards + healthcare-specific profiling by conveners (DirectTrust). Applies to TEFCA, the National
+Provider Directory, etc.

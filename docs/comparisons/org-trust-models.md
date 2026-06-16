@@ -50,6 +50,12 @@ A useful framing that fell out of comparing these:
 
 A complete trust story needs all of these; TC can demonstrate each and contrast the topologies.
 
+## Build sketch — UDAP JWT vs vLEI/ACDC client auth
+
+The VITAL white paper reframes this from "vLEI vs UDAP" to **vLEI as a UDAP client-auth variant** over the
+same OAuth2/FHIR flow. A concrete build sketch for a comparative view / Live Flow (one flow, swappable
+client-assertion + trust anchor) is in [clientauth-comparison-sketch.md](clientauth-comparison-sketch.md).
+
 ## How this drives the build (Phase 5 + Tier-4)
 
 - **Tier-4 hook → concrete:** the missing verifier trust list. The lowest-effort realization is a

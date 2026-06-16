@@ -127,25 +127,43 @@ the PIA program models *subject* identity.
 ### White paper — "Jumpstarting Healthcare Exchange with Reliable Organizational Identity" (March 2026)
 
 CARIN Alliance & DirectTrust, in partnership with GLEIF; cover partners also include **onyx** and
-**healthKERI** (a KERI implementer — corroborates the KERI/ACDC stack). Only **pages 1–2 of 14** were in
-the saved file; transcribed in [vital-initiative-capture.md](vital-initiative-capture.md). Two points
-sharpen the UDAP comparison:
-- **§1.1** frames the core question as *"Who is on the other end of this connection, and are they
-  authorized to receive this data?"* — verbatim the cross-org trust question UDAP answers.
-- It states plainly that *"National Provider Identifiers, Tax ID Numbers, **digital certificates** — has
-  material gaps"* as a universal org identifier. UDAP's trust is **built on** X.509 digital certificates,
-  so the white paper is implicitly arguing the vLEI succeeds where the cert-based approach falls short.
-  That's the crux to engage with in the comparison (and where UDAP's *trust-community governance* — not
-  raw certs — is the real rebuttal).
-- New driver named: the **CMS National Provider Directory (NPD)** (alongside CMS-0057-F).
-- **TODO:** the full 14-page white paper (pages 3–14: §1.2 pilot proposals, the vLEI/KERI technical
-  approach, governance) — obtain a complete, text-layer PDF to capture it.
+**healthKERI** (a KERI implementer — corroborates the KERI/ACDC stack). The **full 14-page text-layer
+white paper** is in the repo (`docs/Jumpstarting_Reliable_Org_Identity.pdf`) and condensed in
+[vital-initiative-capture.md](vital-initiative-capture.md). The crucial finding for this project:
+
+> **It is NOT framed as "vLEI vs UDAP" — it integrates vLEI *as a UDAP client-auth variant.***
+
+- **§3.4 — the UDAP bridge (headline):** there is a **"UDAP vLEI/ACDC Client Authentication
+  specification"** — an OAuth 2.0 token-endpoint client-auth profile — that the paper calls
+  *"semantically equivalent to the existing **UDAP JWT-Based Client Authentication** specification used in
+  the **SSRAA Implementation Guide** for Facilitated FHIR under TEFCA, differing only in the cryptographic
+  assertion format… adding extended capabilities through KERI identifier delegation."* The vLEI is
+  presented in the OAuth 2.0 request as a CESR-encoded **IPEX Grant**; the AS validates signature + trust
+  chain and grants the token with no manual step; each org runs its own IdP ("true zero-trust"). Open-source
+  Client/Server libraries + an example vLEI/OAuth2 healthcare portal are expected **April 2026**. So the two
+  worlds Joe knows — UDAP/OAuth2/FHIR and SSI/vLEI — are being deliberately joined at the client-auth layer.
+- **§2.2 — the explicit critique of digital certificates** (UDAP's identity substrate): the cert **O-value
+  is not globally unique** ("27 St. Mary's Hospitals across 19 states") and certs carry little
+  authorization/relationship info. The paper's rebuttal target is *cert-as-identifier*; UDAP's actual
+  trust comes from **community governance + JWT client auth**, and §3.4 shows vLEI slotting into exactly
+  that client-auth slot — so this is complement, not pure competitor.
+- **§3.2 — credential taxonomy:** GLEIF → **QVI** → Legal Entity → **OOR** (legally-registered officers)
+  / **ECR** (operational roles **and exchange purpose-of-use**, e.g. payer-to-payer under CMS-0057-F; can
+  name a plan/product). The **ECR-as-purpose-of-use** is the direct analog of UDAP's **Authorization
+  Extension Object**.
+- **Two pilots:** (A) **Payer-to-Payer** automated FHIR via vLEI + **Dynamic Client Registration / SSRAA**;
+  (B) **Healthcare Directories** (LEI as the directory anchor, incl. CMS **NPD**). Drivers: CMS-0057-F
+  (Jan 1 2027), CMS NPD, TEFCA expansion, **ISO 17442-3** (vLEI standard, Oct 2024).
+- **Stack:** KERI (AIDs/KELs/pre-rotation/witnesses+watchers) · ACDC (SAIDs/chaining) · CESR · JSON Schema
+  2020-12 · IPEX · PTEL; Ed25519 + BLAKE3.
 
 **Why it matters for the comparison:** VITAL's **WHO / who-is-authorized / purpose-of-use** triplet maps
-almost 1:1 onto **UDAP** (org identity + roles ≈ vLEI **OOR/ECR** + **purpose-of-use ≈ UDAP's Authorization
-Extension Object**) — but answers it with **vLEI / KERI-ACDC** instead of **X.509 + trust communities**,
-for the *same* payer-to-payer FHIR use case. It's the cleanest head-to-head for "SSI vs UDAP" in
-healthcare org trust, and the organizational complement to the PIA subject-assurance program.
+almost 1:1 onto **UDAP** (org identity + roles ≈ vLEI **OOR/ECR**; **purpose-of-use ≈ UDAP's Authorization
+Extension Object**). The reframe from the full paper: this isn't only "SSI vs UDAP" — there's a concrete
+**vLEI-as-UDAP-client-auth** profile (semantically equal to UDAP JWT client auth under SSRAA/TEFCA). For
+TC's Phase 5 that's the richest possible story: same payer-to-payer FHIR use case, two interchangeable
+client-auth assertion formats (UDAP JWT vs vLEI/ACDC-IPEX) over the same OAuth2/FHIR rails — plus the
+organizational complement to the PIA subject-assurance program.
 
 ## Sources
 

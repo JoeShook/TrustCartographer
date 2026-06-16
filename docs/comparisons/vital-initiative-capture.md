@@ -105,38 +105,80 @@ Steps from obtaining an LEI to establishing secure, trustworthy FHIR-based API c
 
 # VITAL White Paper — "Jumpstarting Healthcare Exchange with Reliable Organizational Identity"
 
-> Source: `docs/Jumpstarting_Reliable_Org_Identity.pdf` — a saved view that captured only **pages 1–2 of a
-> 14-page** white paper (the file is a screenshot-style PDF; pages 3–14 are NOT included). Text below is
-> transcribed from those two pages. **TODO:** obtain the full 14-page white paper (with a text layer) for
-> the pilot/technical/governance detail in §1.2 onward.
+> Source: `docs/Jumpstarting_Reliable_Org_Identity.pdf` — the **full 14-page** white paper with a text
+> layer (supersedes the earlier 2-page screenshot). This section is a faithful condensation of the key
+> content; the complete text is extractable from the committed PDF.
 
-**Presented by:** CARIN Alliance & DirectTrust.
-**In Partnership With:** The Global Legal Entity Foundation (GLEIF) and Industry Partners.
-**Partner logos on the cover:** CARIN, DirectTrust, GLEIF, **onyx**, **healthKERI**.
-**Date:** March 2026.
-Subtitle: *Making use of an existing capability that can be an underpinning for trust in the Healthcare Ecosystem.*
+**Presented by:** CARIN Alliance & DirectTrust. **In Partnership With:** GLEIF and Industry Partners.
+**Cover partners:** CARIN, DirectTrust, GLEIF, onyx, healthKERI. **Date:** March 2026.
 
-## Section 1: Summary and Pilot Proposals
+## Section 1 — Summary and Pilot Proposals
+- **1.1 The Problem:** "Who is on the other end of this connection, and are they authorized to receive
+  this data?" Networks each manually onboard the same orgs (weeks/connection); trust gaps have triggered
+  lawsuits and weakened exchange frameworks.
+- **1.2 The Solution — GLEIF / LEI / vLEI:** the LEI (20-char, ISO, G20/GLEIF, 2.6M+ entities in 200+
+  countries) is the proven financial-services answer; the open-source, standardized **vLEI** extends it to
+  a cryptographically verifiable credential proving "who can do what on behalf of which organizations."
+  Drivers: **CMS-0057-F** (payer-to-payer / prior-auth / patient-access API readiness by **Jan 1 2027**)
+  and the **CMS National Provider Directory (NPD)**.
+  > Callout: "There is no single, globally recognized, digitally verifiable organizational identifier…
+  > Every solution proposed so far — National Provider Identifiers, Tax ID Numbers, digital certificates —
+  > has material gaps."
+- **Pilot A — Payer-to-Payer:** automated FHIR connections using vLEI credentials + digital certificates
+  to prove identity and assert exchange purposes; meets CMS-0057-F. Uses **Dynamic Client Registration**
+  enabled by the **SSRAA Implementation Guide** (security standard for Facilitated FHIR under TEFCA).
+  Leverages the **Engagement Context Role (ECR)** credential to assert a specific exchange purpose (e.g.
+  payer-to-payer under CMS-0057-F) and to identify a specific plan/product — building a "trusted community
+  of practice." Drivers also cite **TEFCA expansion** and **ISO 17442-3** (vLEI standard, Oct 2024).
+- **Pilot B — Healthcare Directories:** establish the LEI as a standard org identifier across directories
+  (incl. CMS NPD) so verified data is entered once and shared. Targets DirectTrust HISPs/CAs/RAs, CSPs,
+  clearinghouses, HIEs/HDUs, QHINs. DirectTrust Aggregated Directory is a confirmed participant.
+- **Four steps:** confirm/obtain LEI (LOU; <1 hr, <$100, few days) → acquire vLEI + issue delegated
+  credentials → provide verified data to a participating directory → establish trusted connections.
+- **Contacts:** Ryan Howells (CARIN Alliance); Scott Stuewe (DirectTrust).
 
-### 1.1 The Problem in Plain Terms
+## Section 2 — Background: the org-identity problem & GLEIF
+- **2.1** Individual identity is solved (CSPs do IAL2/AAL2), but most workers act *on behalf of orgs*;
+  org identity is the dimension least reliably captured.
+- **2.2 Why existing identifiers fall short:**
+  - **Type-2 NPIs** — only Medicare billers; tied to billing locations, not org hierarchy.
+  - **TINs/EINs** — align at any hierarchy level, no ownership/line-of-business info, proprietary.
+  - **Digital Certificates** — for crypto auth, not org identifiers; the **O-value is not globally unique**
+    ("there are 27 St. Mary's Hospitals across 19 states") and certs carry little authorization/relationship
+    info. *(This is the explicit critique of cert-based identity — relevant to UDAP, which uses X.509.)*
+- **2.3** Cost of the status quo: every network (TEFCA, Carequality, CommonWell, DirectTrust, HIEs)
+  re-onboards the same orgs; trust disputes contributed to lawsuits weakening Carequality and TEFCA. FHIR's
+  hierarchy problem: servers sit at enterprise/region/hospital/dept level — names are unreliable; LEI-based
+  directory entries fix endpoint discovery.
+- **2.4 GLEIF & the LEI system:** GLEIF (2014, FSB/G20 ROC) runs the Global LEI Index; ~40 **LOUs** issue
+  LEIs; LEI emerged from the 2008 crisis. Six US financial rules (SEC/CFTC/Treasury/Fed) require the LEI.
+- **2.5 The vLEI:** announced 2020; Ecosystem Governance Framework + first QVIs 2021; KERI technical
+  requirements 2022; **GLEIF vLEI Technical Advisory Board incl. healthKERI (July 2024)**; **ISO 17442-3
+  (Oct 2024)**; Partner Program 2025. Proves WHO the org is + WHO the individual is + WHAT they're
+  authorized to do. LEI data: **Level 1 "who is who"**, **Level 2 "who owns whom."**
+- **2.6** Financial-services parallel (LEI in EMIR/MiFID II/Dodd-Frank/ISO 20022); EU **DORA** cites
+  LEI/vLEI; healthcare regulators (ASTP/ONC, CMS, VA) could tie LEI to Medicare participation, Type-2 NPI
+  issuance, or TEFCA QHIN onboarding.
 
-Healthcare organizations exchange billions of records each year — from clinical data, prior authorizations
-to claims and more. Yet the industry has no reliable, automated way to answer the most basic question that
-should precede any exchange: **Who is on the other end of this connection, and are they authorized to
-receive this data?**
-
-Today, every national health information network independently onboards the same organizations, verifying
-the same information through separate, manual processes. This duplication is expensive, slow (often taking
-weeks per connection), and fragile. Gaps in trust have triggered lawsuits, weakened foundational exchange
-frameworks, and discouraged entire sectors of healthcare from participating.
-
-> *There is no single, globally recognized, digitally verifiable organizational identifier capable of
-> supporting automated trust across the healthcare ecosystem. Every solution proposed so far — National
-> Provider Identifiers, Tax ID Numbers, digital certificates — has material gaps that prevent it from
-> filling this role.*
-
-The CMS National Provider Directory (NPD) effort compounds the urgency. CMS needs verified organizational
-data to anchor the NPD, but without a reliable identifier system, the directory will replicate the same
-quality problems that have plagued every multi-contributor directory before it.
-
-Meanwhile, CMS-0057-F drives mandatory API readiness for payer-to-payer exchange, prior … *(page 2 ends; §1.2+ on uncaptured pages 3–14).*
+## Section 3 — How the vLEI works (credentials + infrastructure)
+- **3.1 Trust chain:** GLEIF (root) → **QVIs** → Legal Entities → Role Holders / Authorized Reps; every
+  credential cryptographically traceable to GLEIF.
+- **3.2 Credential types:** (1) **QVI** credential, (2) **Legal Entity vLEI** credential, (3) **QVI AUTH**
+  (OOR-AUTH / ECR-AUTH; LAR authorizes a QVI; revoking cascades), (4) **OOR** (Official Organizational
+  Role — legally registered officers; legally binding signatures), (5) **ECR** (Engagement Context Role —
+  operational roles AND **exchange-purpose** assertions, e.g. payer-to-payer under CMS-0057-F; can identify
+  a plan/product — sub-org identification no current identifier supports).
+- **3.3 Tech stack:** **KERI** (AIDs, append-only KELs, key pre-rotation), **ACDC** (SAIDs, composable
+  chaining), **CESR** (encoding), **JSON Schema 2020-12**. Trust anchoring via **witnesses** (KAWA, min
+  pool 5) + **watchers**. **IPEX** issuance/presentation protocol; **PTEL** revocation registries. Ed25519
+  signatures, BLAKE3 SAIDs, ~128-bit strength; TEEs/HSMs; selective disclosure for PII in ECRs. Open-source
+  Python KERI/ACDC/CESR; witness/watcher reference impls expected **April 2026**.
+- **3.4 Integration with OAuth 2.0 + FHIR (the UDAP bridge):** *"The **UDAP vLEI/ACDC Client Authentication
+  specification** defines a client authentication profile for OAuth 2.0 token endpoints… **semantically
+  equivalent to the existing UDAP JWT-Based Client Authentication specification used in the SSRAA
+  Implementation Guide for Facilitated FHIR under TEFCA**, differing only in the cryptographic assertion
+  format and verification mechanism, and adding extended capabilities through KERI identifier delegation."*
+  A payer FHIR client presents its vLEI in the OAuth 2.0 request (CESR-encoded IPEX Grant); the AS validates
+  the signature + trust chain and grants the token with no manual intervention; each org hosts its own IdP
+  ("true zero-trust"). Open-source Client Library, Server Library, and an example vLEI/OAuth2 healthcare
+  portal expected **April 2026**.

@@ -84,6 +84,13 @@ broader than, the healthcare subject-identity TC models in the PIA program.
 - KERI/ACDC is a *different* stack from TC's Core — a vLEI demo would be a separate spike, not a
   reuse of the SD-JWT/OID4VC kits; worth noting before committing effort.
 
+## Related — to investigate
+
+- **VITAL framework** — <https://vitalframework.org/> (flagged as related to GLEIF/vLEI). Not yet
+  summarized here: the site is a JavaScript single-page app with no server-rendered text, so it
+  couldn't be captured automatically. **TODO:** capture its purpose, governance, and relationship to
+  the vLEI from a rendered source before adding substance — don't assume specifics.
+
 ## Sources
 
 - GLEIF — LEI & Digital Assets: <https://www.gleif.org/en/lei-solutions/featuring-the-lei/digital-assets>

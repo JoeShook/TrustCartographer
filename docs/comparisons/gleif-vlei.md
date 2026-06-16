@@ -84,15 +84,36 @@ broader than, the healthcare subject-identity TC models in the PIA program.
 - KERI/ACDC is a *different* stack from TC's Core — a vLEI demo would be a separate spike, not a
   reuse of the SD-JWT/OID4VC kits; worth noting before committing effort.
 
-## Related — to investigate
+## The VITAL Initiative — vLEI for healthcare org identity
 
-- **VITAL framework** — <https://vitalframework.org/> (flagged as related to GLEIF/vLEI). Not yet
-  summarized here: the site is a JavaScript single-page app with no server-rendered text, so it
-  couldn't be captured automatically. **TODO:** capture its purpose, governance, and relationship to
-  the vLEI from a rendered source before adding substance — don't assume specifics.
+<https://vitalframework.org/> — the **VITAL Initiative** applies GLEIF's **vLEI to (US) healthcare
+organizational identity**. This makes it the most direct healthcare-domain foil to UDAP: it's the
+*organizational-trust* half in the same domain where the PIA program models *subject* identity.
+
+> Captured from a saved PDF of the site (`docs/vitalframework.org.pdf`). That capture was a single
+> clipped viewport (right margin cut off, likely more below the fold), so the summary below is the
+> legible substance, not the full text — treat exact figures/phrasing as approximate until confirmed.
+
+- **Framing / pitch:** *healthcare isn't the first industry to face this.* After the **2008 financial
+  crisis** the G20 stood up **GLEIF** and the **LEI** to identify legal organizations; today **2.6M+
+  entities** across many countries (and many US healthcare organizations) hold LEIs. The **vLEI** now
+  brings that organizational identity into a **verifiable**, cryptographic form.
+- **What the vLEI proves** (VITAL's own framing — "instantly and automatically," replacing manual
+  human effort):
+  - **WHO** an organization is,
+  - **WHO** within that organization is authorized,
+  - **WHAT** purposes of use they are authorized for.
+- **Why this matters here:** that triplet maps almost 1:1 onto **UDAP** — *who* (org identity) +
+  *who-is-authorized* (roles ≈ vLEI OOR/ECR) + **purpose-of-use** (≈ UDAP's **Authorization Extension
+  Object**). So VITAL is a concrete, healthcare-specific instance of the "organizational trust behind
+  the transaction" that TC's Phase 5 contrasts — vLEI/KERI-ACDC vs UDAP/X.509 answering the same
+  WHO/role/purpose question. Pairs naturally with the PIA subject-assurance program.
+- **TODO (when capturing more):** governance/sponsors of the VITAL Initiative itself, its relationship
+  to GLEIF vs an independent healthcare body, and any pilot/spec details below the captured fold.
 
 ## Sources
 
 - GLEIF — LEI & Digital Assets: <https://www.gleif.org/en/lei-solutions/featuring-the-lei/digital-assets>
 - GLEIF — vLEI / Ecosystem Governance Framework: <https://www.gleif.org/en/vlei/introducing-the-vlei-ecosystem-governance-framework>
+- VITAL Initiative — <https://vitalframework.org/> (saved capture: `docs/vitalframework.org.pdf`).
 - ISO 17442 (LEI); KERI / ACDC specs (Trust over IP / WebOfTrust).

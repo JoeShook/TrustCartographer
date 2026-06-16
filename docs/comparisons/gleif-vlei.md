@@ -84,36 +84,58 @@ broader than, the healthcare subject-identity TC models in the PIA program.
 - KERI/ACDC is a *different* stack from TC's Core — a vLEI demo would be a separate spike, not a
   reuse of the SD-JWT/OID4VC kits; worth noting before committing effort.
 
-## The VITAL Initiative — vLEI for healthcare org identity
+## The VITAL Initiative — vLEI for healthcare organizational identity
 
-<https://vitalframework.org/> — the **VITAL Initiative** applies GLEIF's **vLEI to (US) healthcare
-organizational identity**. This makes it the most direct healthcare-domain foil to UDAP: it's the
-*organizational-trust* half in the same domain where the PIA program models *subject* identity.
+<https://vitalframework.org/> — **VITAL = Verifiable Identity and Trust Automation Layer**: "a trusted,
+automated framework for **healthcare organizational ID** via open-source, open-standard protocols." It
+is an **open call for real-world vLEI pilots**, championed by the **CARIN Alliance, DirectTrust, and
+GLEIF** plus industry partners. This is the single most relevant external foil for TC's Phase 5: it
+applies the vLEI to the **same B2B-FHIR cross-org trust problem UDAP targets**, in the same domain where
+the PIA program models *subject* identity.
 
-> Captured from a saved PDF of the site (`docs/vitalframework.org.pdf`). That capture was a single
-> clipped viewport (right margin cut off, likely more below the fold), so the summary below is the
-> legible substance, not the full text — treat exact figures/phrasing as approximate until confirmed.
+> Source: saved capture of the site (`docs/VITAL Initiative Website.html` + `docs/vitalframework.org.pdf`).
 
-- **Framing / pitch:** *healthcare isn't the first industry to face this.* After the **2008 financial
-  crisis** the G20 stood up **GLEIF** and the **LEI** to identify legal organizations; today **2.6M+
-  entities** across many countries (and many US healthcare organizations) hold LEIs. The **vLEI** now
-  brings that organizational identity into a **verifiable**, cryptographic form.
-- **What the vLEI proves** (VITAL's own framing — "instantly and automatically," replacing manual
-  human effort):
+- **Problem it names:** individual ID has progressed, but **organizational ID hasn't kept pace.** Orgs
+  still onboard each new partner manually — "weeks," trust via "spreadsheets, contracts, and manual human
+  review" — which doesn't scale as FHIR APIs multiply. Existing identifiers (**NPIs, TINs, and standard
+  digital certificates**) are called out as having "serious limitations" and "not designed to serve as
+  universal organizational identifiers." *(Note for us: UDAP's trust rests on exactly those X.509 certs +
+  trust communities — so VITAL implicitly positions vLEI as succeeding where certs fall short. That's the
+  sharp comparison to draw.)*
+- **Regulatory driver:** **CMS-0057-F** — by **Jan 1, 2027**, mandatory API readiness for **payer-to-payer**
+  exchange (among others); plus duplicated/inaccurate **healthcare provider directories**.
+- **Solution — import a proven global standard:** post-2008 the G20 created **GLEIF / the LEI**; today
+  **2.6M+ entities in 200+ countries** hold LEIs (many US healthcare orgs already do — a "head start").
+  The **open-source, ISO-standardized vLEI** brings that identity into verifiable digital form. The vLEI
+  is a tamper-proof, cryptographically verifiable credential proving instantly/automatically:
   - **WHO** an organization is,
-  - **WHO** within that organization is authorized,
-  - **WHAT** purposes of use they are authorized for.
-- **Why this matters here:** that triplet maps almost 1:1 onto **UDAP** — *who* (org identity) +
-  *who-is-authorized* (roles ≈ vLEI OOR/ECR) + **purpose-of-use** (≈ UDAP's **Authorization Extension
-  Object**). So VITAL is a concrete, healthcare-specific instance of the "organizational trust behind
-  the transaction" that TC's Phase 5 contrasts — vLEI/KERI-ACDC vs UDAP/X.509 answering the same
-  WHO/role/purpose question. Pairs naturally with the PIA subject-assurance program.
-- **TODO (when capturing more):** governance/sponsors of the VITAL Initiative itself, its relationship
-  to GLEIF vs an independent healthcare body, and any pilot/spec details below the captured fold.
+  - **WHO** within it is authorized to act on its behalf,
+  - **WHAT** purposes of use they are authorized to assert.
+- **Two pilots:**
+  - **Payer-to-Payer** — fast, trustworthy, automated FHIR connections to meet CMS-0057-F.
+  - **Healthcare Directories** — the vLEI as a global standard org identifier across existing directories.
+- **Claimed benefits:** **Speed** (connections that take weeks → a day), **Scale** (hundreds of thousands
+  of connections without added cost/staff), **Trust** ("cryptographically verified, not just contractually
+  attested").
+- **Who should join:** Payers (subject to CMS-0057-F), Providers (FHIR APIs at scale), Partners (interop
+  vendors, HISPs, industry orgs).
+- **Pilot steps:** Obtain/Confirm LEI → Obtain vLEI → Issue vLEI **Role Credentials** → Provision Secure
+  Deployment → Establish Trusted Connections.
+- **Resources referenced:** CARIN Alliance + DirectTrust at ViVE; VITAL Workflow & Processes; an
+  Introductory Slide Deck; the **Original VITAL White Paper** (presented via CARIN Alliance P2P Touchpoint
+  Meetings) — worth capturing next for the technical/governance depth.
+
+**Why it matters for the comparison:** VITAL's **WHO / who-is-authorized / purpose-of-use** triplet maps
+almost 1:1 onto **UDAP** (org identity + roles ≈ vLEI **OOR/ECR** + **purpose-of-use ≈ UDAP's Authorization
+Extension Object**) — but answers it with **vLEI / KERI-ACDC** instead of **X.509 + trust communities**,
+for the *same* payer-to-payer FHIR use case. It's the cleanest head-to-head for "SSI vs UDAP" in
+healthcare org trust, and the organizational complement to the PIA subject-assurance program.
 
 ## Sources
 
 - GLEIF — LEI & Digital Assets: <https://www.gleif.org/en/lei-solutions/featuring-the-lei/digital-assets>
 - GLEIF — vLEI / Ecosystem Governance Framework: <https://www.gleif.org/en/vlei/introducing-the-vlei-ecosystem-governance-framework>
-- VITAL Initiative — <https://vitalframework.org/> (saved capture: `docs/vitalframework.org.pdf`).
+- VITAL Initiative — <https://vitalframework.org/> (CARIN Alliance · DirectTrust · GLEIF; saved
+  captures: `docs/VITAL Initiative Website.html`, `docs/vitalframework.org.pdf`). Next: the VITAL
+  White Paper + slide deck for governance/technical depth.
 - ISO 17442 (LEI); KERI / ACDC specs (Trust over IP / WebOfTrust).

@@ -1,0 +1,115 @@
+@page "/compare/client-auth"
+@using TrustCartographer.UI.Shared
+
+<PageTitle>Client Auth: UDAP vs vLEI — TrustCartographer</PageTitle>
+
+<div class="page-header">
+    <FluentLabel Typo="Typography.PageTitle">Client trust over the same OAuth2/FHIR flow</FluentLabel>
+    <div class="page-subtitle">
+        A payer's FHIR client authenticates to another payer's token endpoint and pulls a <code>Patient</code>.
+        Flip the client-auth mode: the <strong>only</strong> things that change are the
+        <strong>client assertion</strong> the client presents and <strong>how the Authorization Server
+        establishes trust</strong> in it. Everything else — discovery, the OAuth2 token exchange, the access
+        token, the FHIR call — is identical. That is the VITAL white paper's claim that vLEI/ACDC client auth
+        is <em>semantically equivalent</em> to UDAP JWT client auth (SSRAA / Facilitated FHIR).
+        <span class="muted">Conceptual walkthrough (not live traffic). See
+        <code>docs/comparisons/clientauth-comparison-sketch.md</code>.</span>
+    </div>
+</div>
+
+<div class="control-bar">
+    <span style="font-weight:600; margin-right:0.25rem;">Client auth:</span>
+    <FluentButton Appearance="@(mode == AuthMode.Udap ? Appearance.Accent : Appearance.Outline)"
+                  Size="ButtonSize.Small" OnClick="@(() => SetMode(AuthMode.Udap))">
+        UDAP JWT (x5c)
+    </FluentButton>
+    <FluentButton Appearance="@(mode == AuthMode.Vlei ? Appearance.Accent : Appearance.Outline)"
+                  Size="ButtonSize.Small" OnClick="@(() => SetMode(AuthMode.Vlei))">
+        vLEI / ACDC (IPEX)
+    </FluentButton>
+    <span style="width:1.25rem;"></span>
+    <FluentButton Appearance="Appearance.Accent" Size="ButtonSize.Small"
+                  Disabled="@isPlaying" OnClick="PlayAll"
+                  IconStart="@(new RegularIcons.Size16.Play())">
+        @(isPlaying ? "Playing…" : "Play")
+    </FluentButton>
+    <FluentButton Appearance="Appearance.Outline" Size="ButtonSize.Small"
+                  Disabled="@(isPlaying || currentIndex >= steps.Count - 1)" OnClick="StepForward">
+        Step
+    </FluentButton>
+    <FluentButton Appearance="Appearance.Outline" Size="ButtonSize.Small"
+                  Disabled="@isPlaying" OnClick="Replay"
+                  IconStart="@(new RegularIcons.Size16.ArrowCounterclockwise())">
+        Replay
+    </FluentButton>
+</div>
+
+<FluentCard Style="margin-bottom: 1rem;">
+    <strong>Same vs different</strong>
+    <div style="font-size:0.85rem; margin-top:0.4rem;">
+        ✅ Same: discovery · <code>POST /token</code> (<code>grant_type=client_credentials</code>) · access token · <code>GET /Patient</code><br />
+        ◆ Differs: the <strong>client assertion</strong> (step 2) and the <strong>AS trust validation</strong> (step 4).
+        Steps marked ◆ below change with the toggle.
+    </div>
+</FluentCard>
+
+<div class="diagram-wrap">
+    <SsiSequenceDiagram Actors="@actors" Steps="@steps" CurrentIndex="@currentIndex"
+                        SelectedStepIndex="@selectedStepIndex"
+                        Complete="@isComplete" Success="true"
+                        SuccessLabel="FHIR DATA RETURNED" FailLabel="DENIED" />
+</div>
+
+@if (currentIndex >= 0)
+{
+    <div class="step-list">
+        @for (var i = 0; i <= currentIndex && i < steps.Count; i++)
+        {
+            var idx = i;
+            var step = steps[idx];
+            var sel = selectedStepIndex == idx;
+            <div class="step-item @(sel ? "step-item-selected" : "")" @onclick="@(() => SelectStep(idx))">
+                <div class="step-item-header">
+                    <span class="step-number">@(idx + 1)</span>
+                    <span class="step-label">@step.Label</span>
+                    @if (!string.IsNullOrEmpty(step.HttpMethod))
+                    {
+                        <span class="step-http">@step.HttpMethod @step.HttpPath</span>
+                    }
+                </div>
+                @if (sel)
+                {
+                    <div class="step-item-body">@((MarkupString)explanations[idx])</div>
+                }
+            </div>
+        }
+    </div>
+}
+
+<FluentCard Style="margin-top: 1rem;">
+    <strong>Mapping</strong>
+    <table class="cmp">
+        <thead><tr><th></th><th>UDAP (SSRAA)</th><th>vLEI / ACDC</th></tr></thead>
+        <tbody>
+            <tr><td>Client assertion</td><td><code>private_key_jwt</code> (JOSE <code>x5c</code>)</td><td>CESR-encoded <strong>IPEX Grant</strong> (ACDC chain)</td></tr>
+            <tr><td>Identity anchor</td><td>X.509 SAN URI → <strong>trust community CA</strong></td><td>KERI AID → <strong>GLEIF root</strong></td></tr>
+            <tr><td>Purpose-of-use</td><td><code>hl7-b2b.purpose_of_use</code></td><td><strong>ECR</strong> credential</td></tr>
+            <tr><td>Registration trust</td><td>software statement + cert chain</td><td>QVI-issued credential chain</td></tr>
+            <tr><td>Governance</td><td>Trust Community</td><td>vLEI EGF (GLEIF→QVI)</td></tr>
+        </tbody>
+    </table>
+    <p class="muted" style="font-size:0.8rem;">
+        Reframe: this isn't only "SSI vs UDAP" — there is a <strong>UDAP vLEI/ACDC Client Authentication</strong>
+        profile the white paper calls semantically equivalent to UDAP JWT client auth, differing only in the
+        assertion format. Both also answer TrustCartographer's deliberate "verifier has no trust list" hook —
+        with a community CA vs the GLEIF root.
+    </p>
+</FluentCard>
+
+<style>
+    .cmp { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 0.4rem; }
+    .cmp th, .cmp td { text-align: left; padding: 0.35rem 0.6rem; border-bottom: 1px solid rgba(127,127,127,0.2); vertical-align: top; }
+    .cmp th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.75; }
+    .cmp td:first-child { opacity: 0.7; white-space: nowrap; }
+    .muted { opacity: 0.7; }
+</style>

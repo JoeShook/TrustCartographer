@@ -73,12 +73,14 @@ JWT payload+sig, the **X.509 chain**, and the params; returns `201` + `client_id
 X.509 is the basis of community trust; the client URI in the cert **SAN** uniquely identifies the app+operator
 over time. Communities define PKI policies, server URIs, a community-identifier URI, and `scopes_supported`.
 
-## SSRAA
+## SSRAA = the UDAP Security IG (same document)
 
-"Security for Scalable Registration, Authentication, and Authorization" — the **TEFCA Facilitated FHIR**
-security profile, built on the UDAP Security IG above (the white paper's "UDAP JWT-Based Client Authentication
-… used in the SSRAA IG"). Published via the RCE (The Sequoia Project); not separately captured here — the
-UDAP IG is its technical basis. *TODO: capture the SSRAA IG itself if a stable URL is found.*
+**SSRAA *is* the HL7 UDAP Security IG above** — its official full title is **"Security for Scalable
+Registration, Authentication, and Authorization"** (computable name `UDAPSecurity`, **v2.0.0 / STU 2**,
+publisher HL7 International / Security + UDAP.org), at <https://hl7.org/fhir/us/udap-security/>. So the white
+paper's "UDAP JWT-Based Client Authentication … used in the SSRAA IG" refers to exactly the client-auth +
+`hl7-b2b` + DCR detail captured in the sections above — already in hand, nothing further to fetch. (TEFCA
+Facilitated FHIR profiles/adopts this IG; the IG itself is the technical source.)
 
 ## vLEI Ecosystem Governance Framework (EGF v4.0, March 2026)
 
@@ -108,6 +110,6 @@ Based on the **Trust over IP Governance Metamodel**. Delegated hierarchy of **KE
 
 ## Sources
 
-- HL7 FHIR UDAP Security IG: <https://hl7.org/fhir/us/udap-security/> (`b2b.html`, `registration.html`).
+- HL7 FHIR UDAP Security IG **= SSRAA** ("Security for Scalable Registration, Authentication, and
+  Authorization", v2.0.0 / STU 2): <https://hl7.org/fhir/us/udap-security/> (`b2b.html`, `registration.html`).
 - GLEIF vLEI EGF: <https://www.gleif.org/en/vlei/introducing-the-vlei-ecosystem-governance-framework>.
-- SSRAA (TEFCA Facilitated FHIR) — via the RCE / The Sequoia Project (URL TBD).

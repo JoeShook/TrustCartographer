@@ -2,7 +2,9 @@
 
 A build sketch (not yet implemented) for the Phase-5 comparative payoff, anchored on the VITAL white
 paper's key reframe: the **UDAP vLEI/ACDC Client Authentication** profile is *semantically equivalent* to
-**UDAP JWT-Based Client Authentication** (SSRAA IG, Facilitated FHIR under TEFCA) — same OAuth2/FHIR rails,
+**UDAP JWT-Based Client Authentication** (defined in the HL7 UDAP Security IG, whose full title *is*
+**SSRAA** — "Security for Scalable Registration, Authentication, and Authorization", v2.0.0/STU 2; the
+profile TEFCA Facilitated FHIR adopts) — same OAuth2/FHIR rails,
 different client-assertion format. See [gleif-vlei.md](gleif-vlei.md) and
 [vital-initiative-capture.md](vital-initiative-capture.md). The concrete wire forms (UDAP `client_assertion`,
 the `hl7-b2b` purpose-of-use object, the software statement, the vLEI EGF chain) are in

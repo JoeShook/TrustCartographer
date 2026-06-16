@@ -100,3 +100,43 @@ Steps from obtaining an LEI to establishing secure, trustworthy FHIR-based API c
 - VITAL Initiative Workflow and Processes
 - VITAL Initiative Introductory Slide Deck
 - Original VITAL Initiative White Paper
+
+---
+
+# VITAL White Paper — "Jumpstarting Healthcare Exchange with Reliable Organizational Identity"
+
+> Source: `docs/Jumpstarting_Reliable_Org_Identity.pdf` — a saved view that captured only **pages 1–2 of a
+> 14-page** white paper (the file is a screenshot-style PDF; pages 3–14 are NOT included). Text below is
+> transcribed from those two pages. **TODO:** obtain the full 14-page white paper (with a text layer) for
+> the pilot/technical/governance detail in §1.2 onward.
+
+**Presented by:** CARIN Alliance & DirectTrust.
+**In Partnership With:** The Global Legal Entity Foundation (GLEIF) and Industry Partners.
+**Partner logos on the cover:** CARIN, DirectTrust, GLEIF, **onyx**, **healthKERI**.
+**Date:** March 2026.
+Subtitle: *Making use of an existing capability that can be an underpinning for trust in the Healthcare Ecosystem.*
+
+## Section 1: Summary and Pilot Proposals
+
+### 1.1 The Problem in Plain Terms
+
+Healthcare organizations exchange billions of records each year — from clinical data, prior authorizations
+to claims and more. Yet the industry has no reliable, automated way to answer the most basic question that
+should precede any exchange: **Who is on the other end of this connection, and are they authorized to
+receive this data?**
+
+Today, every national health information network independently onboards the same organizations, verifying
+the same information through separate, manual processes. This duplication is expensive, slow (often taking
+weeks per connection), and fragile. Gaps in trust have triggered lawsuits, weakened foundational exchange
+frameworks, and discouraged entire sectors of healthcare from participating.
+
+> *There is no single, globally recognized, digitally verifiable organizational identifier capable of
+> supporting automated trust across the healthcare ecosystem. Every solution proposed so far — National
+> Provider Identifiers, Tax ID Numbers, digital certificates — has material gaps that prevent it from
+> filling this role.*
+
+The CMS National Provider Directory (NPD) effort compounds the urgency. CMS needs verified organizational
+data to anchor the NPD, but without a reliable identifier system, the directory will replicate the same
+quality problems that have plagued every multi-contributor directory before it.
+
+Meanwhile, CMS-0057-F drives mandatory API readiness for payer-to-payer exchange, prior … *(page 2 ends; §1.2+ on uncaptured pages 3–14).*

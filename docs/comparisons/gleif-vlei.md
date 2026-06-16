@@ -122,8 +122,24 @@ the PIA program models *subject* identity.
 - **Pilot steps:** Obtain/Confirm LEI → Obtain vLEI → Issue vLEI **Role Credentials** → Provision Secure
   Deployment → Establish Trusted Connections.
 - **Resources referenced:** CARIN Alliance + DirectTrust at ViVE; VITAL Workflow & Processes; an
-  Introductory Slide Deck; the **Original VITAL White Paper** (presented via CARIN Alliance P2P Touchpoint
-  Meetings) — worth capturing next for the technical/governance depth.
+  Introductory Slide Deck; the **VITAL White Paper** (presented via CARIN Alliance P2P Touchpoint Meetings).
+
+### White paper — "Jumpstarting Healthcare Exchange with Reliable Organizational Identity" (March 2026)
+
+CARIN Alliance & DirectTrust, in partnership with GLEIF; cover partners also include **onyx** and
+**healthKERI** (a KERI implementer — corroborates the KERI/ACDC stack). Only **pages 1–2 of 14** were in
+the saved file; transcribed in [vital-initiative-capture.md](vital-initiative-capture.md). Two points
+sharpen the UDAP comparison:
+- **§1.1** frames the core question as *"Who is on the other end of this connection, and are they
+  authorized to receive this data?"* — verbatim the cross-org trust question UDAP answers.
+- It states plainly that *"National Provider Identifiers, Tax ID Numbers, **digital certificates** — has
+  material gaps"* as a universal org identifier. UDAP's trust is **built on** X.509 digital certificates,
+  so the white paper is implicitly arguing the vLEI succeeds where the cert-based approach falls short.
+  That's the crux to engage with in the comparison (and where UDAP's *trust-community governance* — not
+  raw certs — is the real rebuttal).
+- New driver named: the **CMS National Provider Directory (NPD)** (alongside CMS-0057-F).
+- **TODO:** the full 14-page white paper (pages 3–14: §1.2 pilot proposals, the vLEI/KERI technical
+  approach, governance) — obtain a complete, text-layer PDF to capture it.
 
 **Why it matters for the comparison:** VITAL's **WHO / who-is-authorized / purpose-of-use** triplet maps
 almost 1:1 onto **UDAP** (org identity + roles ≈ vLEI **OOR/ECR** + **purpose-of-use ≈ UDAP's Authorization

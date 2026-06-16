@@ -93,7 +93,7 @@ GLEIF** plus industry partners. This is the single most relevant external foil f
 applies the vLEI to the **same B2B-FHIR cross-org trust problem UDAP targets**, in the same domain where
 the PIA program models *subject* identity.
 
-> Source: saved capture of the site (`docs/VITAL Initiative Website.html` + `docs/vitalframework.org.pdf`).
+> Source text captured offline in [vital-initiative-capture.md](vital-initiative-capture.md).
 
 - **Problem it names:** individual ID has progressed, but **organizational ID hasn't kept pace.** Orgs
   still onboard each new partner manually — "weeks," trust via "spreadsheets, contracts, and manual human
@@ -135,7 +135,7 @@ healthcare org trust, and the organizational complement to the PIA subject-assur
 
 - GLEIF — LEI & Digital Assets: <https://www.gleif.org/en/lei-solutions/featuring-the-lei/digital-assets>
 - GLEIF — vLEI / Ecosystem Governance Framework: <https://www.gleif.org/en/vlei/introducing-the-vlei-ecosystem-governance-framework>
-- VITAL Initiative — <https://vitalframework.org/> (CARIN Alliance · DirectTrust · GLEIF; saved
-  captures: `docs/VITAL Initiative Website.html`, `docs/vitalframework.org.pdf`). Next: the VITAL
-  White Paper + slide deck for governance/technical depth.
+- VITAL Initiative — <https://vitalframework.org/> (CARIN Alliance · DirectTrust · GLEIF; offline text:
+  [vital-initiative-capture.md](vital-initiative-capture.md)). Next: the VITAL White Paper + slide deck
+  for governance/technical depth.
 - ISO 17442 (LEI); KERI / ACDC specs (Trust over IP / WebOfTrust).
